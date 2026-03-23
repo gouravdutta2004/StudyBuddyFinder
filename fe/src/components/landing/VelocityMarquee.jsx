@@ -20,14 +20,14 @@ export default function VelocityMarquee({ baseVelocity = 2 }) {
   useAnimationFrame((t, delta) => {
     let moveBy = directionFactor.current * baseVelocity * (delta / 1000);
     // Change direction based on scroll velocity (reverses on upward scroll)
-    if (velocityFactor.get() < 0) { directionFactor.current = -1; } 
+    if (velocityFactor.get() < 0) { directionFactor.current = -1; }
     else if (velocityFactor.get() > 0) { directionFactor.current = 1; }
 
     moveBy += directionFactor.current * moveBy * velocityFactor.get();
     baseX.set(baseX.get() + moveBy);
   });
 
-  const words = ["Harvard University", "MIT", "Stanford", "Oxford", "Cambridge", "UC Berkeley", "Yale", "Princeton"];
+  const words = ["C.V. RAMAN GLOBAL UNIVERSITY, BHUBANESWAR"];
 
   return (
     <Box sx={{ overflow: 'hidden', whiteSpace: 'nowrap', py: 6, mt: 10, display: 'flex', flexDirection: 'column', gap: 4 }}>
