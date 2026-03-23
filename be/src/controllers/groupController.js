@@ -24,6 +24,13 @@ const createGroup = async (req, res) => {
       creator: req.user._id,
       members: [req.user._id]
     });
+    const ActivityLog = require('../models/ActivityLog');
+    await ActivityLog.create({
+      type: 'general',
+      description: `New squad formed: "${name}"`,
+      userId: req.user._id,
+      groupId: group._id
+    });
     res.status(201).json(group);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -41,6 +48,15 @@ const joinGroup = async (req, res) => {
 
     group.members.push(req.user._id);
     await group.save();
+    
+    const ActivityLog = require('../models/ActivityLog');
+    await ActivityLog.create({
+      type: 'general',
+      description: `Joined the squad: "${group.name}"`,
+      userId: req.user._id,
+      groupId: group._id
+    });
+    
     res.json({ message: 'Joined group successfully', group });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -85,4 +101,41 @@ const getGroupQuickPeek = async (req, res) => {
   }
 };
 
-module.exports = { getGroups, createGroup, joinGroup, leaveGroup, getGroupQuickPeek };
+const updateGroupKanban = async (req, res) => {
+  try {
+    const { kanbanTasks } = req.body;
+    const group = await StudyGroup.findById(req.params.id);
+    if (!group) return res.status(404).json({ message: 'Group not found' });
+    group.kanbanTasks = kanbanTasks;
+    await group.save();
+    res.json(group.kanbanTasks);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const uploadGroupResource = async (req, res) => {
+  try {
+    const { id, type, url, title } = req.body;
+    const group = await StudyGroup.findById(req.params.id);
+    if (!group) return res.status(404).json({ message: 'Group not found' });
+    const newResource = { id, type, url, title, uploadedBy: req.user._id };
+    group.resources.push(newResource);
+    await group.save();
+    
+    // Auto-create an activity log for resource upload
+    const ActivityLog = require('../models/ActivityLog');
+    await ActivityLog.create({
+      type: 'general',
+      description: `New resource "${title}" shared in squad`,
+      userId: req.user._id,
+      groupId: group._id
+    });
+
+    res.status(201).json(newResource);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+module.exports = { getGroups, createGroup, joinGroup, leaveGroup, getGroupQuickPeek, updateGroupKanban, uploadGroupResource };

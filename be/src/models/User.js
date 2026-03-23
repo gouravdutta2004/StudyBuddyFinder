@@ -17,7 +17,7 @@ const userSchema = new mongoose.Schema({
   location: { type: String, default: '' },
   studyStyle: {
     type: String,
-    enum: ['Visual', 'Auditory', 'Reading/Writing', 'Kinesthetic', 'Mixed'],
+    enum: ['Visual', 'Auditory', 'Reading/Writing', 'Kinesthetic', 'Mixed', 'Pomodoro'],
     default: 'Mixed'
   },
   availability: [{
@@ -43,7 +43,12 @@ const userSchema = new mongoose.Schema({
     targetHours: { type: Number, required: true },
     currentHours: { type: Number, default: 0 },
     isCompleted: { type: Boolean, default: false }
-  }]
+  }],
+  activityLog: [{ type: Date }], // For GitHub-style heatmap
+  subscription: {
+    plan: { type: String, enum: ['basic', 'pro', 'squad'], default: 'basic' },
+    activeUntil: { type: Date }
+  }
 }, { timestamps: true });
 
 userSchema.pre('save', async function () {

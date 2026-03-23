@@ -4,6 +4,8 @@ const Admin = require('../models/Admin');
 const Settings = require('../models/Settings');
 const crypto = require('crypto');
 const sendEmail = require('../utils/sendEmail');
+const { OAuth2Client } = require('google-auth-library');
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const generateToken = (id, role) => jwt.sign({ id, role }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
@@ -174,4 +176,60 @@ const changePassword = async (req, res) => {
   }
 };
 
-module.exports = { register, login, getMe, forgotPassword, resetPassword, changePassword };
+const googleAuth = async (req, res) => {
+  try {
+    const { credential } = req.body;
+    if (!credential) return res.status(400).json({ message: 'No signature provided' });
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    
+    const payload = ticket.getPayload();
+    const { email, name, picture } = payload;
+
+    let user = await Admin.findOne({ email });
+    let role = 'admin';
+
+    if (!user) {
+      user = await User.findOne({ email });
+      role = 'user';
+    }
+
+    if (!user) {
+      const randomPassword = crypto.randomBytes(20).toString('hex');
+      user = await User.create({
+        name,
+        email,
+        password: randomPassword,
+        avatar: picture,
+      });
+      role = 'user';
+      
+      try {
+        const settings = await Settings.findOne();
+        const template = settings?.emailTemplateWelcome || "<h1>Welcome {name}!</h1><p>We are glad to have you.</p>";
+        const welcomeHtml = template.replace(/{name}/g, user.name);
+        await sendEmail({
+          email: user.email,
+          subject: 'Welcome to StudyBuddyFinder!',
+          message: `Welcome ${user.name}!`,
+          html: welcomeHtml
+        });
+      } catch (err) { console.error('Welcome email failed', err); }
+    }
+
+    if (!user.isActive) return res.status(403).json({ message: 'Account blocked by administrator' });
+
+    const userData = user.toJSON();
+    if (role === 'admin') userData.isAdmin = true;
+
+    res.json({ token: generateToken(user._id, role), user: userData });
+  } catch (err) {
+    console.error('Google Auth Error:', err);
+    res.status(500).json({ message: 'Google Authentication failed. Please check your GOOGLE_CLIENT_ID.' });
+  }
+};
+
+module.exports = { register, login, getMe, forgotPassword, resetPassword, changePassword, googleAuth };

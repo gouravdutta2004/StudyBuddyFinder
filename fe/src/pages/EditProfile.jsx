@@ -5,6 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Plus, X, UploadCloud, User as UserIcon, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Container, Typography, Box, Card, Avatar, Button, IconButton, TextField, MenuItem, Switch, FormControlLabel, Chip, Grid, Paper, Divider, Stack } from '@mui/material';
+import ActivityHeatmap from '../components/profile/ActivityHeatmap';
 
 const SUBJECTS = ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'Computer Science', 'History', 'Literature', 'Economics', 'Psychology', 'Engineering', 'Art', 'Music', 'Philosophy', 'Sociology', 'Statistics'];
 const LEVELS = ['High School', 'Undergraduate', 'Graduate', 'PhD', 'Self-Learner', 'Other'];
@@ -188,6 +189,10 @@ export default function EditProfile({ userId, onComplete }) {
               />
             </Box>
           </Paper>
+        )}
+
+        {id && (
+          <ActivityHeatmap userId={id} />
         )}
 
         <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}>

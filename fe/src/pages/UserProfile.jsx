@@ -4,6 +4,7 @@ import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import { User, MapPin, GraduationCap, BookOpen, MessageCircle, UserPlus, Pencil, UserMinus, Trophy, Flame, Clock, Star } from 'lucide-react';
 import toast from 'react-hot-toast';
+import ActivityHeatmap from '../components/profile/ActivityHeatmap';
 import { Container, Card, Box, Avatar, Typography, Button, IconButton, Chip, Grid, LinearProgress, useTheme, CardContent, CircularProgress } from '@mui/material';
 
 export default function UserProfile() {
@@ -213,6 +214,9 @@ export default function UserProfile() {
               </Card>
             </Grid>
           </Grid>
+
+          {/* Activity Heatmap Widget */}
+          <ActivityHeatmap userId={targetId} />
 
           {/* Profile Completeness for Me */}
           {targetId === me?._id && completeness < 100 && (

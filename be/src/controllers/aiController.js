@@ -15,7 +15,7 @@ exports.chat = async (req, res) => {
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-pro",
+      model: "gemini-1.5-flash",
     });
 
     let formattedHistory = history && Array.isArray(history) ? history.map(msg => ({
@@ -40,5 +40,31 @@ exports.chat = async (req, res) => {
   } catch (err) {
     console.error('AI Chat Error Details:', err.message, err.stack);
     res.status(500).json({ message: 'Failed to process AI request. Please try again later.', error: err.message });
+  }
+};
+
+exports.squadTutor = async (req, res) => {
+  try {
+    const { prompt, squadName, subject } = req.body;
+    if (!prompt) return res.status(400).json({ message: 'Prompt is required' });
+
+    if (!process.env.GEMINI_API_KEY) {
+      await new Promise(resolve => setTimeout(resolve, 800));
+      return res.json({
+        text: `Hey squad! I am your AI Study Tutor for **${squadName || 'this group'}**. Add a GEMINI_API_KEY to see me in action answering questions about ${subject || 'your subjects'}!`
+      });
+    }
+
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+    const context = `You are a helpful, encouraging AI Study Tutor embedded in a study squad called "${squadName}". The subject is "${subject}". Keep your answers concise, formatted in markdown, and directed at a group of students. Explain concepts clearly. User asks: `;
+    const result = await model.generateContent(context + prompt);
+    const responseText = result.response.text();
+
+    res.json({ text: responseText });
+  } catch (err) {
+    console.error('Squad Tutor AI Error:', err.message);
+    res.status(500).json({ message: 'AI failed to process. Try again later.', error: err.message });
   }
 };

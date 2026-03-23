@@ -2,8 +2,40 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
-import { BookOpen, Calendar, Lightbulb, ChevronRight, CheckCircle } from 'lucide-react';
+import { BookOpen, Calendar, Lightbulb, ChevronRight, CheckCircle2, Sparkles } from 'lucide-react';
+import { Box, Typography, Button, TextField, Grid, IconButton, useTheme } from '@mui/material';
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import toast from 'react-hot-toast';
+
+function TiltCard({ children, sx, className }) {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const mouseXSpring = useSpring(x);
+  const mouseYSpring = useSpring(y);
+  const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["3deg", "-3deg"]);
+  const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-3deg", "3deg"]);
+
+  return (
+    <motion.div
+      className={className}
+      style={{ rotateX, rotateY, perspective: 1000, height: '100%' }}
+      onMouseMove={(e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        x.set((e.clientX - rect.left) / rect.width - 0.5);
+        y.set((e.clientY - rect.top) / rect.height - 0.5);
+      }}
+      onMouseLeave={() => { x.set(0); y.set(0); }}
+    >
+      <Box sx={{ 
+        bgcolor: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255,255,255,0.05)', borderRadius: '32px',
+        boxShadow: '0 20px 40px rgba(0, 0, 0, 0.4)', overflow: 'hidden', height: '100%', ...sx 
+      }}>
+        {children}
+      </Box>
+    </motion.div>
+  );
+}
 
 export default function Onboarding() {
   const { user, updateUser } = useAuth();
@@ -37,7 +69,7 @@ export default function Onboarding() {
         preferOnline
       });
       updateUser(res.data);
-      toast.success('Profile updated successfully!');
+      toast.success('Onboarding complete!');
       navigate('/dashboard');
     } catch (err) {
       toast.error('Failed to save profile details');
@@ -46,114 +78,168 @@ export default function Onboarding() {
     }
   };
 
+  const steps = [
+    { title: 'Subjects', icon: <BookOpen />, id: 1 },
+    { title: 'Availability', icon: <Calendar />, id: 2 },
+    { title: 'Study Style', icon: <Lightbulb />, id: 3 },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="max-w-xl w-full bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
-        <div className="bg-blue-600 p-6 text-white text-center">
-          <h2 className="text-2xl font-bold">Welcome to StudyBuddy!</h2>
-          <p className="opacity-90 mt-1">Let's set up your profile in 3 simple steps.</p>
-        </div>
-        
-        <div className="p-8">
-          {/* Progress Bar */}
-          <div className="flex justify-between items-center mb-8 relative">
-             <div className="absolute left-0 top-1/2 w-full h-1 bg-gray-200 -z-10 -translate-y-1/2 rounded-full"></div>
-             <div className="absolute left-0 top-1/2 h-1 bg-blue-600 -z-10 -translate-y-1/2 rounded-full transition-all duration-300" style={{ width: `${(step - 1) * 50}%` }}></div>
-             {[1, 2, 3].map(i => (
-               <div key={i} className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${step >= i ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'}`}>
-                 {step > i ? <CheckCircle size={16} /> : i}
-               </div>
-             ))}
-          </div>
+    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 4, bgcolor: '#020617', backgroundImage: 'radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 50%)' }}>
+      
+      <Box sx={{ width: '100%', maxWidth: 700 }}>
+        <Box sx={{ textAlign: 'center', mb: 6 }}>
+          <Box sx={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 64, height: 64, borderRadius: '20px', bgcolor: 'rgba(99, 102, 241, 0.1)', mb: 3 }}>
+            <Sparkles size={32} color="#818cf8" />
+          </Box>
+          <Typography variant="h3" fontWeight="900" color="white" mb={1} sx={{ letterSpacing: '-1px' }}>
+            Welcome to StudyBuddy
+          </Typography>
+          <Typography variant="h6" color="rgba(255,255,255,0.5)">
+            Let's tune your experience.
+          </Typography>
+        </Box>
 
-          {step === 1 && (
-            <div className="animate-fade-in space-y-4">
-              <div className="flex items-center gap-3 text-lg font-bold text-gray-800 mb-4">
-                <BookOpen className="text-blue-500" /> What do you study?
-              </div>
-              <p className="text-sm text-gray-500">Enter your subjects separated by commas. This helps AI match you with the right study buddies.</p>
-              <input 
-                autoFocus
-                className="input w-full p-3 text-lg" 
-                placeholder="e.g. Calculus, Physics, Computer Science..." 
-                value={subjects} 
-                onChange={e => setSubjects(e.target.value)} 
-              />
-              <button onClick={handleNext} disabled={!subjects.trim()} className="btn-primary w-full mt-4 flex justify-center py-3">
-                Continue <ChevronRight size={18} className="ml-1" />
-              </button>
-            </div>
-          )}
+        <TiltCard sx={{ p: { xs: 4, md: 6 } }}>
+          {/* Progress Indicators */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 6, position: 'relative' }}>
+            <Box sx={{ position: 'absolute', top: '50%', left: 0, width: '100%', height: 2, bgcolor: 'rgba(255,255,255,0.05)', zIndex: 0, transform: 'translateY(-50%)' }} />
+            <Box sx={{ position: 'absolute', top: '50%', left: 0, height: 2, bgcolor: '#6366f1', zIndex: 0, transform: 'translateY(-50%)', transition: 'width 0.4s ease', width: `${(step - 1) * 50}%` }} />
+            
+            {steps.map((s) => (
+              <Box key={s.id} sx={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                <Box onClick={() => s.id < step && setStep(s.id)} sx={{ width: 40, height: 40, borderRadius: 'full', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s ease', cursor: s.id < step ? 'pointer' : 'default', bgcolor: step >= s.id ? '#6366f1' : '#0f172a', border: '2px solid', borderColor: step >= s.id ? '#6366f1' : 'rgba(255,255,255,0.1)', color: step >= s.id ? 'white' : 'rgba(255,255,255,0.3)' }}>
+                  {step > s.id ? <CheckCircle2 size={20} /> : <Typography fontWeight="800">{s.id}</Typography>}
+                </Box>
+                <Typography variant="caption" fontWeight="700" color={step >= s.id ? 'white' : 'rgba(255,255,255,0.3)'}>{s.title}</Typography>
+              </Box>
+            ))}
+          </Box>
 
-          {step === 2 && (
-            <div className="animate-fade-in space-y-4">
-              <div className="flex items-center gap-3 text-lg font-bold text-gray-800 mb-4">
-                <Calendar className="text-green-500" /> When are you available?
-              </div>
-              <p className="text-sm text-gray-500 mb-2">Select the days you usually study.</p>
-              <div className="flex flex-wrap gap-2 mb-4">
-                {['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].map(day => {
-                  const active = availability.some(a => a.day === day);
-                  return (
-                    <button 
-                      key={day} 
-                      onClick={() => toggleDay(day)}
-                      className={`px-4 py-2 rounded-full text-sm font-medium border transition-colors ${active ? 'bg-blue-100 border-blue-300 text-blue-700' : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'}`}
+          <AnimatePresence mode="wait">
+            {step === 1 && (
+              <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                <Typography variant="h5" fontWeight="800" color="white" mb={1} display="flex" alignItems="center" gap={1.5}>
+                  <BookOpen size={24} color="#6366f1" /> What do you study?
+                </Typography>
+                <Typography color="rgba(255,255,255,0.5)" mb={4}>Enter your subjects separated by commas. Our AI uses this to match you.</Typography>
+                
+                <TextField 
+                  fullWidth autoFocus placeholder="e.g. Calculus, Physics, Machine Learning..." 
+                  value={subjects} onChange={e => setSubjects(e.target.value)}
+                  onKeyPress={e => e.key === 'Enter' && subjects.trim() && handleNext()}
+                  sx={{ 
+                    input: { color: 'white', fontSize: '1.1rem', py: 2 }, 
+                    '& .MuiOutlinedInput-root': {
+                      bgcolor: 'rgba(255,255,255,0.03)', borderRadius: '16px',
+                      '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
+                      '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
+                      '&.Mui-focused fieldset': { borderColor: '#6366f1' },
+                    }
+                  }} 
+                />
+                
+                <Box mt={4} display="flex" justifyContent="flex-end">
+                  <Button variant="contained" onClick={handleNext} disabled={!subjects.trim()} sx={{ borderRadius: '100px', px: 4, py: 1.5, bgcolor: '#6366f1', textTransform: 'none', fontWeight: 800, fontSize: '1rem', '&:hover': { bgcolor: '#4f46e5' } }} endIcon={<ChevronRight />}>
+                    Continue
+                  </Button>
+                </Box>
+              </motion.div>
+            )}
+
+            {step === 2 && (
+              <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                <Typography variant="h5" fontWeight="800" color="white" mb={1} display="flex" alignItems="center" gap={1.5}>
+                  <Calendar size={24} color="#10b981" /> When are you available?
+                </Typography>
+                <Typography color="rgba(255,255,255,0.5)" mb={4}>Select the days you typically dedicate to studying.</Typography>
+                
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, mb: 5 }}>
+                  {['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].map(day => {
+                    const active = availability.some(a => a.day === day);
+                    return (
+                      <Button 
+                        key={day} onClick={() => toggleDay(day)}
+                        variant={active ? 'contained' : 'outlined'}
+                        sx={{ 
+                          borderRadius: '100px', textTransform: 'none', fontWeight: 700, px: 3, py: 1,
+                          bgcolor: active ? 'rgba(16, 185, 129, 0.1)' : 'transparent',
+                          color: active ? '#10b981' : 'rgba(255,255,255,0.5)',
+                          borderColor: active ? '#10b981' : 'rgba(255,255,255,0.1)',
+                          '&:hover': { borderColor: '#10b981', bgcolor: 'rgba(16, 185, 129, 0.05)' }
+                        }}
+                      >
+                        {day}
+                      </Button>
+                    );
+                  })}
+                </Box>
+
+                <Typography variant="h6" fontWeight="700" color="white" mb={2}>Session Preference</Typography>
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                  {[
+                    { label: 'Online First', value: true, desc: 'Virtual rooms' },
+                    { label: 'In-Person', value: false, desc: 'Local coffee shops' }
+                  ].map((pref) => (
+                    <Box 
+                      key={pref.label} onClick={() => setPreferOnline(pref.value)}
+                      sx={{ 
+                        flex: 1, p: 3, borderRadius: '20px', cursor: 'pointer', transition: 'all 0.2s',
+                        border: '2px solid', borderColor: preferOnline === pref.value ? '#6366f1' : 'rgba(255,255,255,0.05)',
+                        bgcolor: preferOnline === pref.value ? 'rgba(99, 102, 241, 0.05)' : 'rgba(255,255,255,0.02)'
+                      }}
                     >
-                      {day.substring(0, 3)}
-                    </button>
-                  );
-                })}
-              </div>
-              
-              <p className="text-sm text-gray-500 mt-4 mb-2">Session Preference</p>
-              <div className="flex gap-4">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" checked={preferOnline} onChange={() => setPreferOnline(true)} className="w-4 h-4 text-blue-600" />
-                  <span>Online</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" checked={!preferOnline} onChange={() => setPreferOnline(false)} className="w-4 h-4 text-blue-600" />
-                  <span>In-Person</span>
-                </label>
-              </div>
+                      <Typography fontWeight="800" color="white">{pref.label}</Typography>
+                      <Typography variant="body2" color="rgba(255,255,255,0.5)">{pref.desc}</Typography>
+                    </Box>
+                  ))}
+                </Box>
 
-              <div className="flex gap-3 pt-4">
-                <button onClick={() => setStep(1)} className="btn-secondary w-full py-3">Back</button>
-                <button onClick={handleNext} className="btn-primary w-full py-3 flex justify-center">Continue <ChevronRight size={18} className="ml-1" /></button>
-              </div>
-            </div>
-          )}
+                <Box mt={5} display="flex" justifyContent="space-between">
+                  <Button onClick={() => setStep(1)} sx={{ color: 'rgba(255,255,255,0.5)', textTransform: 'none', fontWeight: 700 }}>Back</Button>
+                  <Button variant="contained" onClick={handleNext} sx={{ borderRadius: '100px', px: 4, py: 1.5, bgcolor: '#6366f1', textTransform: 'none', fontWeight: 800, fontSize: '1rem', '&:hover': { bgcolor: '#4f46e5' } }} endIcon={<ChevronRight />}>
+                    Continue
+                  </Button>
+                </Box>
+              </motion.div>
+            )}
 
-          {step === 3 && (
-            <div className="animate-fade-in space-y-4">
-              <div className="flex items-center gap-3 text-lg font-bold text-gray-800 mb-4">
-                <Lightbulb className="text-yellow-500" /> What is your study style?
-              </div>
-              <p className="text-sm text-gray-500 mb-4">Select the method that works best for you.</p>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {['Visual', 'Auditory', 'Reading/Writing', 'Kinesthetic', 'Mixed'].map(style => (
-                  <div 
-                    key={style}
-                    onClick={() => setStudyStyle(style)}
-                    className={`cursor-pointer border p-4 rounded-xl transition-all ${studyStyle === style ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200 text-blue-800' : 'border-gray-200 hover:border-gray-300 text-gray-700'}`}
-                  >
-                    <div className="font-semibold text-center">{style}</div>
-                  </div>
-                ))}
-              </div>
+            {step === 3 && (
+              <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                <Typography variant="h5" fontWeight="800" color="white" mb={1} display="flex" alignItems="center" gap={1.5}>
+                  <Lightbulb size={24} color="#f59e0b" /> What is your study style?
+                </Typography>
+                <Typography color="rgba(255,255,255,0.5)" mb={4}>Select the method that works best for your brain.</Typography>
+                
+                <Grid container spacing={2}>
+                  {['Visual', 'Auditory', 'Reading/Writing', 'Kinesthetic', 'Mixed', 'Pomodoro'].map(style => (
+                    <Grid item xs={6} sm={4} key={style}>
+                      <Box 
+                        onClick={() => setStudyStyle(style)}
+                        sx={{ 
+                          p: 3, textAlign: 'center', borderRadius: '20px', cursor: 'pointer', transition: 'all 0.2s',
+                          border: '2px solid', borderColor: studyStyle === style ? '#f59e0b' : 'rgba(255,255,255,0.05)',
+                          bgcolor: studyStyle === style ? 'rgba(245, 158, 11, 0.05)' : 'rgba(255,255,255,0.02)',
+                          '&:hover': { borderColor: studyStyle === style ? '#f59e0b' : 'rgba(255,255,255,0.2)' }
+                        }}
+                      >
+                        <Typography fontWeight="700" color={studyStyle === style ? '#f59e0b' : 'white'}>{style}</Typography>
+                      </Box>
+                    </Grid>
+                  ))}
+                </Grid>
 
-              <div className="flex gap-3 pt-6">
-                 <button onClick={() => setStep(2)} className="btn-secondary w-full py-3">Back</button>
-                 <button onClick={handleFinish} disabled={loading} className="btn-primary w-full py-3">
-                   {loading ? 'Saving...' : 'Finish Setup'}
-                 </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+                <Box mt={6} display="flex" justifyContent="space-between">
+                  <Button onClick={() => setStep(2)} sx={{ color: 'rgba(255,255,255,0.5)', textTransform: 'none', fontWeight: 700 }}>Back</Button>
+                  <Button variant="contained" onClick={handleFinish} disabled={loading} sx={{ borderRadius: '100px', px: 4, py: 1.5, bgcolor: '#10b981', color: '#064e3b', textTransform: 'none', fontWeight: 900, fontSize: '1rem', '&:hover': { bgcolor: '#059669', color: 'white' } }} endIcon={<Sparkles />}>
+                    {loading ? 'Finalizing...' : 'Complete Profile'}
+                  </Button>
+                </Box>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </TiltCard>
+      </Box>
+    </Box>
   );
 }

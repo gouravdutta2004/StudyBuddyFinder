@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
-import { Users, Plus, X, Search } from 'lucide-react';
+import { Users, Plus, X, Search, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import GroupQuickPeek from '../components/GroupQuickPeek';
 
 export default function PublicGroups() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -145,13 +147,18 @@ export default function PublicGroups() {
                   </div>
                   
                   {isMember ? (
-                    <button onClick={() => handleLeave(group._id)} className="btn-secondary py-1 px-3 text-sm flex items-center gap-1 !text-red-600 border-red-200 hover:bg-red-50 dark:border-red-900/30 dark:hover:bg-red-900/20">
-                      Leave
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button onClick={(e) => { e.stopPropagation(); navigate(`/groups/${group._id}`); }} className="btn-primary py-1 px-3 text-sm flex items-center gap-1">
+                        Open Hub <ChevronRight size={14} />
+                      </button>
+                      <button onClick={(e) => { e.stopPropagation(); handleLeave(group._id); }} className="btn-secondary py-1 px-3 text-sm flex items-center gap-1 !text-red-600 border-red-200 hover:bg-red-50 dark:border-red-900/30 dark:hover:bg-red-900/20">
+                        Leave
+                      </button>
+                    </div>
                   ) : isFull ? (
                     <span className="text-gray-400 text-sm font-medium px-3 py-1">Full</span>
                   ) : (
-                    <button onClick={() => handleJoin(group._id)} className="btn-primary py-1 px-3 text-sm">
+                    <button onClick={(e) => { e.stopPropagation(); handleJoin(group._id); }} className="btn-primary py-1 px-3 text-sm">
                       Join Group
                     </button>
                   )}

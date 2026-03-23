@@ -139,7 +139,7 @@ export default function AIAssistantWidget() {
                          '& ul': { mt: 0, pl: 2, fontSize: '0.875rem' },
                          '& ol': { mt: 0, pl: 2, fontSize: '0.875rem' }
                        }}>
-                         <ReactMarkdown>{msg.content}</ReactMarkdown>
+                         <ReactMarkdown>{msg.content || ''}</ReactMarkdown>
                        </Box>
                     )}
                   </Box>
