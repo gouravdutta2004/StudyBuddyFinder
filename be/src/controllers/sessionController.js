@@ -59,6 +59,18 @@ const getMySessions = async (req, res) => {
   }
 };
 
+const getSessionById = async (req, res) => {
+  try {
+    const session = await Session.findById(req.params.id)
+      .populate('host', 'name avatar')
+      .populate('participants', 'name avatar');
+    if (!session) return res.status(404).json({ message: 'Session not found' });
+    res.json(session);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 const joinSession = async (req, res) => {
   try {
     const session = await Session.findById(req.params.id);
@@ -147,4 +159,4 @@ const rsvpSession = async (req, res) => {
   }
 };
 
-module.exports = { createSession, getSessions, getMySessions, joinSession, leaveSession, deleteSession, addNote, rsvpSession };
+module.exports = { createSession, getSessions, getMySessions, getSessionById, joinSession, leaveSession, deleteSession, addNote, rsvpSession };

@@ -110,7 +110,7 @@ export default function Dashboard() {
         setRecentMatches(matchRes.data.slice(0, 3));
         const now = new Date().getTime();
         setUpcomingSessions(sessRes.data.filter(s => {
-          const sessionEnd = new Date(s.startTime).getTime() + (s.duration * 60000);
+          const sessionEnd = new Date(s.scheduledAt).getTime() + (s.duration * 60000);
           return sessionEnd > now;
         }).slice(0, 3));
         setPendingRequests(connRes.data.pendingRequests.slice(0, 3));
@@ -275,7 +275,7 @@ export default function Dashboard() {
                 ) : (
                   <Grid container spacing={3}>
                     {upcomingSessions.map(session => {
-                      const isOngoing = new Date(session.startTime).getTime() <= new Date().getTime();
+                      const isOngoing = new Date(session.scheduledAt).getTime() <= new Date().getTime();
                       return (
                       <Grid item xs={12} sm={6} key={session._id}>
                         <motion.div layoutId={`session-${session._id}`} layout whileHover={{ y: -5 }}>
@@ -287,10 +287,10 @@ export default function Dashboard() {
                           }}>
                             <Box sx={{ bgcolor: 'rgba(16, 185, 129, 0.1)', color: '#34d399', px: 2, py: 1.5, borderRadius: '16px', textAlign: 'center', minWidth: 60 }}>
                               <Typography variant="caption" fontWeight={900} display="block" sx={{ textTransform: 'uppercase', letterSpacing: 1 }}>
-                                {new Date(session.startTime).toLocaleDateString('en-US', { month: 'short' })}
+                                {new Date(session.scheduledAt).toLocaleDateString('en-US', { month: 'short' })}
                               </Typography>
                               <Typography variant="h5" fontWeight={900} display="block" sx={{ lineHeight: 1, mt: 0.5 }}>
-                                {new Date(session.startTime).getDate()}
+                                {new Date(session.scheduledAt).getDate()}
                               </Typography>
                             </Box>
                             <Box sx={{ flex: 1, minWidth: 0 }}>

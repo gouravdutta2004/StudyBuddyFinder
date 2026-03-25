@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 import NotesUploader from '../components/NotesUploader';
 import VideoRoom from '../components/VideoRoom';
@@ -14,6 +15,7 @@ import { io } from 'socket.io-client';
 export default function StudyRoom() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showPanel, setShowPanel] = useState(true);
@@ -22,24 +24,50 @@ export default function StudyRoom() {
   const whiteboardRef = useRef(null);
 
   useEffect(() => {
-    const fetchSession = async () => {
+    const fetchSessionAndJoin = async () => {
       try {
-        const res = await api.get('/sessions/my');
-        const found = res.data.find(s => s._id === id);
-        if (found) {
-          setSession(found);
-        } else {
-          toast.error("You are not a participant in this session.");
-          navigate('/sessions');
+        // Fetch the global session via the new dedicated endpoint
+        const res = await api.get(`/sessions/${id}`);
+        const found = res.data;
+        
+        if (!found) {
+          toast.error("Session not found");
+          return navigate('/sessions');
         }
+
+        // Check if user is already a participant
+        const isParticipant = found.participants?.some(p => p._id === user?._id || p === user?._id);
+        const isHost = found.host?._id === user?._id || found.host === user?._id;
+
+        if (!isParticipant && !isHost) {
+          // Attempt Auto-Join sequence for direct link sharers
+          try {
+            await api.post(`/sessions/${id}/join`);
+            toast.success("Automatically joined the session via direct link!");
+            // Re-fetch populated session
+            const joinedRes = await api.get(`/sessions/${id}`);
+            setSession(joinedRes.data);
+          } catch (joinErr) {
+            toast.error(joinErr.response?.data?.message || "Session is full or unavailable.");
+            return navigate('/sessions');
+          }
+        } else {
+          // Already a participant
+          setSession(found);
+        }
+
       } catch (err) {
-        toast.error('Failed to load study room');
+        toast.error('Failed to load study room or verify permissions');
+        navigate('/sessions');
       } finally {
         setLoading(false);
       }
     };
-    fetchSession();
-  }, [id, navigate]);
+    
+    if (user) {
+      fetchSessionAndJoin();
+    }
+  }, [id, navigate, user]);
 
   useEffect(() => {
     if (!session) return;

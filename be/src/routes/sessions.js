@@ -1,9 +1,10 @@
 const router = require('express').Router();
 const { protect } = require('../middleware/auth');
-const { createSession, getSessions, getMySessions, joinSession, leaveSession, deleteSession, addNote, rsvpSession } = require('../controllers/sessionController');
+const { createSession, getSessions, getMySessions, getSessionById, joinSession, leaveSession, deleteSession, addNote, rsvpSession } = require('../controllers/sessionController');
 
 router.get('/', protect, getSessions);
 router.get('/my', protect, getMySessions);
+router.get('/:id', protect, getSessionById);
 router.post('/', protect, createSession);
 router.post('/:id/join', protect, joinSession);
 router.post('/:id/leave', protect, leaveSession);
