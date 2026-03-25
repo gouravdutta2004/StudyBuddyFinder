@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useTheme as useCustomTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, User, Menu as MenuIcon, Sun, Moon, Bell, BellRing, Sparkles } from 'lucide-react';
+import { LogOut, User, Menu as MenuIcon, Sun, Moon, Bell, BellRing, BellOff, Sparkles } from 'lucide-react';
 import api from '../api/axios';
-import { AppBar, Toolbar, Typography, Button, IconButton, Badge, Avatar, Box, Menu, MenuItem, useTheme, useMediaQuery } from '@mui/material';
+import { AppBar, Toolbar, Typography, Button, IconButton, Badge, Avatar, Box, Menu, MenuItem, Tooltip, useTheme, useMediaQuery } from '@mui/material';
+import { usePushNotifications } from '../hooks/usePushNotifications';
 
 export default function Navbar({ onMenuClick }) {
   const { user, logout } = useAuth();
@@ -15,10 +16,13 @@ export default function Navbar({ onMenuClick }) {
   const [notifications, setNotifications] = useState([]);
   const [anchorElNotif, setAnchorElNotif] = useState(null);
   const [anchorElUser, setAnchorElUser] = useState(null);
+  const { permission, isSubscribed, loading: pushLoading, subscribe, unsubscribe, autoSubscribeIfPermitted } = usePushNotifications();
 
   useEffect(() => {
     if (user && !user.isAdmin) {
       api.get('/notifications').then(res => setNotifications(res.data)).catch(() => {});
+      // Silently re-subscribe if permission was already granted
+      autoSubscribeIfPermitted();
     }
   }, [user]);
 
@@ -27,6 +31,14 @@ export default function Navbar({ onMenuClick }) {
       await api.put(`/notifications/${id}/read`);
       setNotifications(prev => prev.map(n => n._id === id ? { ...n, read: true } : n));
     } catch (e) {}
+  };
+
+  const handlePushToggle = () => {
+    if (isSubscribed) {
+      unsubscribe();
+    } else {
+      subscribe();
+    }
   };
 
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -81,6 +93,25 @@ export default function Navbar({ onMenuClick }) {
               ))
             )}
           </Menu>
+
+          {/* Push Notification Toggle */}
+          {user && !user.isAdmin && (
+            <Tooltip title={isSubscribed ? 'Disable push notifications' : (permission === 'denied' ? 'Notifications blocked in browser settings' : 'Enable push notifications')}>
+              <span>
+                <IconButton
+                  onClick={handlePushToggle}
+                  disabled={pushLoading || permission === 'denied'}
+                  sx={{
+                    color: isSubscribed ? '#6366f1' : (currentThemeMode === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)'),
+                    transition: 'color 0.2s',
+                    '&:hover': { color: '#6366f1' }
+                  }}
+                >
+                  {isSubscribed ? <BellRing size={20} /> : <BellOff size={20} />}
+                </IconButton>
+              </span>
+            </Tooltip>
+          )}
 
           <IconButton onClick={toggleTheme} sx={{ color: currentThemeMode === 'dark' ? 'rgba(255,255,255,0.7)' : 'text.secondary' }}>
             {currentThemeMode === 'dark' ? <Sun size={20} /> : <Moon size={20} />}

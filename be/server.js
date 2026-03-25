@@ -37,6 +37,8 @@ app.use('/api/calendar', require('./src/routes/calendar'));
 app.use('/api/ai', require('./src/routes/ai'));
 app.use('/api/activity', require('./src/routes/activity'));
 app.use('/api/billing', require('./src/routes/billing.routes'));
+app.use('/api/push', require('./src/routes/push'));
+
 
 app.get('/api/health', (req, res) => res.json({ status: 'OK', message: 'StudyBuddyFinder API running' }));
 

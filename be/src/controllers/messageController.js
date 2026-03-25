@@ -2,6 +2,8 @@ const Message = require('../models/Message');
 const User = require('../models/User');
 const Admin = require('../models/Admin');
 const FlaggedItem = require('../models/FlaggedItem');
+const { sendPushToUser } = require('../utils/pushNotification');
+
 
 const BAD_WORDS = ['spam', 'abuse', 'offensive', 'scam', 'fake', 'hate', 'slur'];
 
@@ -45,11 +47,20 @@ const sendMessage = async (req, res) => {
     }
     msgObj.sender = senderObj;
 
+    // Send browser push to receiver (fire-and-forget, don't block response)
+    sendPushToUser(receiverId, {
+      title: `💬 New message from ${senderObj?.name || 'Someone'}`,
+      body: cleanContent.length > 80 ? cleanContent.substring(0, 80) + '...' : cleanContent,
+      icon: '/icons.svg',
+      url: '/messages'
+    }).catch(() => {});
+
     res.status(201).json(msgObj);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
+
 
 const getConversation = async (req, res) => {
   try {

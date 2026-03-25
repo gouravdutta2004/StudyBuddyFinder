@@ -3,6 +3,7 @@ const Admin = require('../models/Admin');
 const Feedback = require('../models/Feedback');
 const Subject = require('../models/Subject');
 const sendEmail = require('../utils/sendEmail');
+const { sendPushToUser } = require('../utils/pushNotification');
 
 const getProfile = async (req, res) => {
   try {
@@ -141,6 +142,13 @@ const sendRequest = async (req, res) => {
       if (io) {
         io.to(userId).emit('notification', { message: `New connection request from ${req.user.name}` });
       }
+      // Browser push notification
+      await sendPushToUser(userId, {
+        title: '📨 New Connection Request',
+        body: `${req.user.name} wants to connect with you on StudyBuddyFinder!`,
+        icon: '/icons.svg',
+        url: '/connections'
+      });
       await sendEmail({
         email: target.email,
         subject: 'New Study Buddy Request!',
@@ -177,6 +185,13 @@ const acceptRequest = async (req, res) => {
         if (io) {
           io.to(userId).emit('notification', { message: `${req.user.name} accepted your connection request!` });
         }
+        // Browser push notification
+        await sendPushToUser(userId, {
+          title: '🎉 Connection Accepted!',
+          body: `${req.user.name} accepted your connection request. You can now message each other!`,
+          icon: '/icons.svg',
+          url: '/connections'
+        });
         await sendEmail({
           email: targetUser.email,
           subject: 'Connection Request Accepted!',
