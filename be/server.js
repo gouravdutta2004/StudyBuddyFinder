@@ -38,9 +38,13 @@ app.use('/api/ai', require('./src/routes/ai'));
 app.use('/api/activity', require('./src/routes/activity'));
 app.use('/api/billing', require('./src/routes/billing.routes'));
 app.use('/api/push', require('./src/routes/push'));
-
+app.use('/api/campus', require('./src/routes/campus'));
 
 app.get('/api/health', (req, res) => res.json({ status: 'OK', message: 'StudyBuddyFinder API running' }));
+
+// ----- GLOBAL PRESENCE MAP -----
+const onlineUsers = new Map();
+app.set('onlineUsers', onlineUsers);
 
 const http = require('http');
 const { Server } = require('socket.io');
@@ -72,6 +76,23 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     console.log('🔴 Socket terminated: ', socket.id);
+    if (socket.userId && socket.organizationId) {
+      onlineUsers.delete(socket.userId);
+      socket.to(socket.organizationId).emit('user_status_change', { userId: socket.userId, status: 'offline' });
+    }
+  });
+
+  // Walled Garden Presence
+  socket.on('join_campus', ({ userId, organizationId }) => {
+    if (!organizationId) return; // Ignore global users
+    socket.join(organizationId);
+    
+    // Attach identifying data to this socket session for disconnect cleanup
+    socket.userId = userId;
+    socket.organizationId = organizationId;
+    
+    onlineUsers.set(userId, socket.id);
+    socket.to(organizationId).emit('user_status_change', { userId, status: 'online' });
   });
 
   // Collaboration Features: WebRTC and Whiteboard
