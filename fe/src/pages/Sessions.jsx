@@ -173,6 +173,13 @@ export default function Sessions() {
                   sx={{ mt: 0.5, ml: 1 }}
                 />
               </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControlLabel 
+                  control={<Switch checked={form.recurrence === 'WEEKLY'} onChange={e => setForm({ ...form, recurrence: e.target.checked ? 'WEEKLY' : 'NONE' })} color="secondary" />} 
+                  label={<Typography variant="body2" fontWeight={600}>Repeat Weekly (4 Weeks)</Typography>} 
+                  sx={{ mt: 0.5, ml: 1 }}
+                />
+              </Grid>
             </Grid>
             
             {form.isOnline ? (

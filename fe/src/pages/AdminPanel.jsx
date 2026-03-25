@@ -560,22 +560,222 @@ export default function AdminPanel() {
               </Box>
             )}
 
-            {/* Other generic Tabs handled similarly... Moderation Hub */}
+            {/* Moderation Hub (Feedback) */}
             {activeTab === 'feedback' && (
               <Box component={motion.div} variants={fadeUpSpring}>
-                {/* Simplify retaining features visually mapped */}
                 <TiltCard sx={{ p: 4 }}>
                   <Typography variant="h5" fontWeight={900} mb={3} display="flex" alignItems="center" gap={1.5} color="white"><Shield color="#f59e0b" size={28} /> Moderation Matrix</Typography>
-                  <Typography variant="body1" color="rgba(255,255,255,0.6)">Live Moderation tools are active. Switch tabs to review reports and automated content flags in the standard table views natively connected.</Typography>
-                  {/* ... Retained existing tables here manually via same MUI structure but themed via the dark default ... */}
+                  <Tabs value={activeModerationTab} onChange={(e, val) => setActiveModerationTab(val)} sx={{ mb: 4, '& .MuiTabs-indicator': { bgcolor: '#818cf8', height: 3, borderRadius: 3 }, '& .MuiTab-root': { color: 'rgba(255,255,255,0.5)', fontWeight: 800 }, '& .Mui-selected': { color: 'white !important' } }}>
+                    <Tab label="User Reports" value="reports" />
+                    <Tab label="Auto-Flagged Content" value="flagged" />
+                  </Tabs>
+                  
+                  <TableContainer>
+                    <Table sx={{ '& .MuiTableCell-root': { borderColor: 'rgba(255,255,255,0.05)', color: 'white' } }}>
+                      <TableHead>
+                        <TableRow sx={{ bgcolor: 'rgba(0,0,0,0.1)' }}>
+                          <TableCell><Typography fontWeight={800} color="rgba(255,255,255,0.5)">Entity/Reporter</Typography></TableCell>
+                          <TableCell><Typography fontWeight={800} color="rgba(255,255,255,0.5)">Reason/Content</Typography></TableCell>
+                          <TableCell align="center"><Typography fontWeight={800} color="rgba(255,255,255,0.5)">Status</Typography></TableCell>
+                          <TableCell align="right"><Typography fontWeight={800} color="rgba(255,255,255,0.5)">Action</Typography></TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {activeModerationTab === 'reports' ? (
+                          reports.map(r => (
+                            <TableRow key={r._id} hover sx={{ '&:hover': { bgcolor: 'rgba(255,255,255,0.02)' } }}>
+                              <TableCell>Reporter: {r.reporter?.name || 'Unknown'}<br/>Reported: {r.reportedUser?.name || 'Unknown'}</TableCell>
+                              <TableCell>{r.reason}: {r.description}</TableCell>
+                              <TableCell align="center"><Chip size="small" label={r.status} color={r.status === 'pending' ? 'warning' : 'success'} sx={{ fontWeight: 800 }} /></TableCell>
+                              <TableCell align="right">
+                                {r.status === 'pending' && <Button size="small" variant="outlined" color="success" onClick={() => updateFeedback(r._id, 'resolved')}>Resolve</Button>}
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        ) : (
+                          flaggedContent.map(f => (
+                            <TableRow key={f._id} hover sx={{ '&:hover': { bgcolor: 'rgba(255,255,255,0.02)' } }}>
+                              <TableCell>User: {f.user?.name || 'Unknown'}</TableCell>
+                              <TableCell>{f.contentType}: {f.contentExcerpt}</TableCell>
+                              <TableCell align="center"><Chip size="small" label={f.status} color={f.status === 'pending' ? 'warning' : 'success'} sx={{ fontWeight: 800 }} /></TableCell>
+                              <TableCell align="right">
+                                <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                                  {f.status === 'pending' && (
+                                    <>
+                                      <Button size="small" variant="outlined" color="success" onClick={() => updateFlaggedItem(f._id, 'cleared', f.user?._id, null)}>Clear</Button>
+                                      <Button size="small" variant="contained" color="warning" onClick={() => updateFlaggedItem(f._id, 'actioned', f.user?._id, 'warn')}>Warn</Button>
+                                    </>
+                                  )}
+                                </Box>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
                 </TiltCard>
+              </Box>
+            )}
+
+            {/* Subjects Management */}
+            {activeTab === 'subjects' && (
+              <Box component={motion.div} variants={fadeUpSpring}>
+                <TiltCard sx={{ p: 4 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                    <Typography variant="h5" fontWeight={900} display="flex" alignItems="center" gap={1.5} color="white"><BookOpen color="#3b82f6" size={28} /> Global Topics Hierarchy</Typography>
+                  </Box>
+                  <Box component="form" onSubmit={createSubject} sx={{ display: 'flex', gap: 2, mb: 4 }}>
+                    <TextField size="small" fullWidth placeholder="New global subject designation..." value={newSubject} onChange={e => setNewSubject(e.target.value)} sx={{ '& .MuiOutlinedInput-root': { bgcolor: 'rgba(255,255,255,0.05)', color: 'white' } }} />
+                    <Button type="submit" variant="contained" disabled={!newSubject} sx={{ bgcolor: '#3b82f6', fontWeight: 800 }}>Inject</Button>
+                  </Box>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
+                    {filteredSubjects.map(s => (
+                      <Chip key={s._id} label={s.name} onDelete={role === 'Super Admin' ? () => deleteSubject(s._id) : undefined} 
+                        sx={{ bgcolor: 'rgba(59, 130, 246, 0.1)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.2)', fontWeight: 700, p: 1, '& .MuiChip-deleteIcon': { color: '#ef4444', '&:hover': { color: '#b91c1c' } } }} 
+                      />
+                    ))}
+                  </Box>
+                </TiltCard>
+              </Box>
+            )}
+
+            {/* Communications & Settings */}
+            {activeTab === 'communication' && role === 'Super Admin' && (
+              <Box component={motion.div} variants={fadeUpSpring}>
+                <Grid container spacing={3}>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <TiltCard sx={{ p: 4 }}>
+                      <Typography variant="h5" fontWeight={900} mb={3} display="flex" alignItems="center" gap={1.5} color="white"><Mail color="#ec4899" size={28} /> Mass Broadcast Command</Typography>
+                      <Box component="form" onSubmit={handleBroadcast} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                        <TextField select label="Target Demographic" SelectProps={{ native: true }} value={broadcastForm.targetUsers} onChange={e => setBroadcastForm({...broadcastForm, targetUsers: e.target.value})} fullWidth sx={{ '& .MuiInputBase-input': { color: 'white' }, '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.5)' } }}>
+                          <option value="all" style={{color: 'black'}}>All Entities</option>
+                          <option value="active" style={{color: 'black'}}>Active Engaged</option>
+                          <option value="inactive" style={{color: 'black'}}>Dormant / Drop-offs</option>
+                        </TextField>
+                        <TextField label="Transmission Subject" value={broadcastForm.subject} onChange={e => setBroadcastForm({...broadcastForm, subject: e.target.value})} fullWidth sx={{ '& .MuiInputBase-input': { color: 'white' }, '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.5)' } }} required />
+                        <TextField label="Transmission Payload Markdown" multiline rows={6} value={broadcastForm.message} onChange={e => setBroadcastForm({...broadcastForm, message: e.target.value})} fullWidth sx={{ '& .MuiInputBase-input': { color: 'white' }, '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.5)' } }} required />
+                        <Button type="submit" variant="contained" disabled={saving} sx={{ bgcolor: '#ec4899', fontWeight: 800, mt: 1 }}>{saving ? 'Transmitting...' : 'Dispatch Broadcast'}</Button>
+                      </Box>
+                    </TiltCard>
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <TiltCard sx={{ p: 4 }}>
+                      <Typography variant="h5" fontWeight={900} mb={3} display="flex" alignItems="center" gap={1.5} color="white"><Sliders color="#8b5cf6" size={28} /> Global App Config</Typography>
+                      <Box component="form" align="left" onSubmit={updateSiteConfig} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                        <FormControlLabel control={<Switch checked={siteConfig.announcementBannerActive} onChange={e => setSiteConfig({...siteConfig, announcementBannerActive: e.target.checked})} color="secondary" />} label={<Typography color="white" fontWeight={700}>Enable Global Announcement Banner</Typography>} />
+                        <TextField label="Banner Content Markdown" value={siteConfig.announcementBannerText} onChange={e => setSiteConfig({...siteConfig, announcementBannerText: e.target.value})} fullWidth disabled={!siteConfig.announcementBannerActive} sx={{ '& .MuiInputBase-input': { color: 'white' }, '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.5)' } }} />
+                        
+                        <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)', my: 1 }} />
+                        <Typography variant="subtitle2" color="rgba(255,255,255,0.5)" fontWeight={800} textTransform="uppercase">UI Elements Engine</Typography>
+                        
+                        <FormControlLabel control={<Switch checked={siteConfig.showQuickActions} onChange={e => setSiteConfig({...siteConfig, showQuickActions: e.target.checked})} color="secondary" />} label={<Typography color="white" fontWeight={700}>Show Quick Actions (User Panel)</Typography>} />
+                        <FormControlLabel control={<Switch checked={siteConfig.showSuggestedMatches} onChange={e => setSiteConfig({...siteConfig, showSuggestedMatches: e.target.checked})} color="secondary" />} label={<Typography color="white" fontWeight={700}>Show Suggested Buddies Widget</Typography>} />
+                        <FormControlLabel control={<Switch checked={siteConfig.showStatCards} onChange={e => setSiteConfig({...siteConfig, showStatCards: e.target.checked})} color="secondary" />} label={<Typography color="white" fontWeight={700}>Show User Stat Cards</Typography>} />
+                        
+                        <Button type="submit" variant="contained" disabled={saving} sx={{ bgcolor: '#8b5cf6', fontWeight: 800, mt: 2 }}>{saving ? 'Syncing...' : 'Sync Config Hierarchy'}</Button>
+                      </Box>
+                    </TiltCard>
+                  </Grid>
+                </Grid>
+              </Box>
+            )}
+
+            {/* Audit Logs */}
+            {activeTab === 'audit' && (
+              <Box component={motion.div} variants={fadeUpSpring}>
+                <TiltCard sx={{ p: 4 }}>
+                  <Typography variant="h5" fontWeight={900} mb={3} display="flex" alignItems="center" gap={1.5} color="white"><Shield color="#64748b" size={28} /> System Audit Trail</Typography>
+                  <TableContainer>
+                    <Table sx={{ '& .MuiTableCell-root': { borderColor: 'rgba(255,255,255,0.05)', color: 'white' } }}>
+                      <TableHead>
+                        <TableRow sx={{ bgcolor: 'rgba(0,0,0,0.1)' }}>
+                          <TableCell><Typography fontWeight={800} color="rgba(255,255,255,0.5)">Timestamp</Typography></TableCell>
+                          <TableCell><Typography fontWeight={800} color="rgba(255,255,255,0.5)">Actor</Typography></TableCell>
+                          <TableCell><Typography fontWeight={800} color="rgba(255,255,255,0.5)">Action Key</Typography></TableCell>
+                          <TableCell><Typography fontWeight={800} color="rgba(255,255,255,0.5)">Target / Detail</Typography></TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {auditLogs.map((log, i) => (
+                          <TableRow key={i} hover sx={{ '&:hover': { bgcolor: 'rgba(255,255,255,0.02)' } }}>
+                            <TableCell>{new Date(log.timestamp).toLocaleString()}</TableCell>
+                            <TableCell>{log.adminName || 'System'}</TableCell>
+                            <TableCell><Chip size="small" label={log.action} sx={{ bgcolor: 'rgba(255,255,255,0.1)', color: 'white', fontWeight: 800 }} /></TableCell>
+                            <TableCell>{log.details}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </TiltCard>
+              </Box>
+            )}
+
+            {/* Gamification Hub */}
+            {activeTab === 'gamification' && (
+              <Box component={motion.div} variants={fadeUpSpring}>
+                <TiltCard sx={{ p: 4 }}>
+                  <Typography variant="h5" fontWeight={900} mb={3} display="flex" alignItems="center" gap={1.5} color="white"><Trophy color="#f59e0b" size={28} /> Gamification Engine</Typography>
+                  <TableContainer>
+                    <Table sx={{ '& .MuiTableCell-root': { borderColor: 'rgba(255,255,255,0.05)', color: 'white' } }}>
+                      <TableHead>
+                        <TableRow sx={{ bgcolor: 'rgba(0,0,0,0.1)' }}>
+                          <TableCell><Typography fontWeight={800} color="rgba(255,255,255,0.5)">Rank</Typography></TableCell>
+                          <TableCell><Typography fontWeight={800} color="rgba(255,255,255,0.5)">Entity</Typography></TableCell>
+                          <TableCell><Typography fontWeight={800} color="rgba(255,255,255,0.5)">XP / Level</Typography></TableCell>
+                          <TableCell align="right"><Typography fontWeight={800} color="rgba(255,255,255,0.5)">God Action</Typography></TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {leaderboard.map((lb, i) => (
+                          <TableRow key={lb._id} hover sx={{ '&:hover': { bgcolor: 'rgba(255,255,255,0.02)' } }}>
+                            <TableCell><Typography variant="h6" fontWeight={900} color={i === 0 ? '#f59e0b' : i === 1 ? '#94a3b8' : i === 2 ? '#b45309' : 'white'}>#{i+1}</Typography></TableCell>
+                            <TableCell>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                <Avatar src={lb.avatar} sx={{ width: 32, height: 32 }} />
+                                <Typography fontWeight={800}>{lb.name}</Typography>
+                              </Box>
+                            </TableCell>
+                            <TableCell>Lvl {lb.level} ({lb.xp} XP)</TableCell>
+                            <TableCell align="right">
+                               <Button size="small" variant="outlined" sx={{ color: '#f59e0b', borderColor: 'rgba(245, 158, 11, 0.4)', borderRadius: '100px', fontWeight: 800 }} onClick={() => { setSelectedUser(lb); setOpenBadgeDialog(true); }}>Award Badge</Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </TiltCard>
+              </Box>
+            )}
+
+            {/* Support Chat / Messages natively mounted for Super Admins / Agents */}
+            {activeTab === 'messages' && (
+              <Box component={motion.div} variants={fadeUpSpring} sx={{ height: '75vh' }}>
+                 <TiltCard sx={{ p: 0, height: '100%', overflow: 'hidden' }}>
+                    <Messages />
+                 </TiltCard>
               </Box>
             )}
 
           </Box>
         )}
       </Box>
-      <Dialog open={false}><DialogTitle>Stubbed</DialogTitle></Dialog>
+
+      {/* Broadcast Modal Dialog */}
+      <Dialog open={showBroadcastModal} onClose={() => setShowBroadcastModal(false)} PaperProps={{ sx: { bgcolor: '#0f172a', color: 'white', borderRadius: '24px', minWidth: 400, border: '1px solid rgba(255,255,255,0.1)' } }}>
+        <DialogTitle sx={{ fontWeight: 900, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>Targeted Broadcast</DialogTitle>
+        <DialogContent sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+           <Typography variant="body2" color="rgba(255,255,255,0.6)">Transmitting to {broadcastForm.targetUsers?.length || 0} selected entities.</Typography>
+           <TextField label="Subject" value={broadcastForm.subject} onChange={e => setBroadcastForm({...broadcastForm, subject: e.target.value})} fullWidth sx={{ '& .MuiInputBase-input': { color: 'white' }, '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.5)' } }} />
+           <TextField label="Message" multiline rows={4} value={broadcastForm.message} onChange={e => setBroadcastForm({...broadcastForm, message: e.target.value})} fullWidth sx={{ '& .MuiInputBase-input': { color: 'white' }, '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.5)' } }} />
+        </DialogContent>
+        <DialogActions sx={{ p: 3, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+          <Button onClick={() => setShowBroadcastModal(false)} sx={{ color: 'rgba(255,255,255,0.5)', fontWeight: 800 }}>Abort</Button>
+          <Button onClick={handleBroadcast} variant="contained" disabled={saving} sx={{ bgcolor: '#ec4899', fontWeight: 800 }}>{saving ? 'Transmitting...' : 'Dispatch'}</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
+const DailyQuest = require('../models/DailyQuest');
+const Bounty = require('../models/Bounty');
+const Endorsement = require('../models/Endorsement');
 const { protect } = require('../middleware/auth');
 
 // @route   POST /api/gamification/session-end
@@ -117,6 +120,84 @@ router.delete('/goals/:id', protect, async (req, res) => {
    } catch (err) {
      res.status(500).send('Server Error');
    }
+});
+
+// @route   GET /api/gamification/quests
+// @desc    Get or generate daily quests for the user
+router.get('/quests', protect, async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    let quests = await DailyQuest.find({ userId: req.user.id, createdAt: { $gte: today } });
+    if (quests.length === 0) {
+      const generated = [
+        { userId: req.user.id, task: 'Complete a 60-minute Focus Session', isCompleted: false },
+        { userId: req.user.id, task: 'Endorse a Study Buddy', isCompleted: false },
+        { userId: req.user.id, task: 'Log 2 total study hours today', isCompleted: false }
+      ];
+      quests = await DailyQuest.insertMany(generated);
+    }
+    res.json(quests);
+  } catch (err) { res.status(500).send('Server Error'); }
+});
+
+// @route   PUT /api/gamification/quests/:id
+router.put('/quests/:id', protect, async (req, res) => {
+  try {
+    const quest = await DailyQuest.findByIdAndUpdate(req.params.id, { isCompleted: true }, { new: true });
+    res.json(quest);
+  } catch (err) { res.status(500).send('Server Error'); }
+});
+
+// @route   GET /api/gamification/bounties
+router.get('/bounties', protect, async (req, res) => {
+  try {
+    const bounties = await Bounty.find({ status: 'OPEN' }).populate('creatorId', 'name avatar');
+    res.json(bounties);
+  } catch (err) { res.status(500).send('Server Error'); }
+});
+
+// @route   POST /api/gamification/bounties
+router.post('/bounties', protect, async (req, res) => {
+  try {
+    const bounty = await Bounty.create({ creatorId: req.user.id, title: req.body.title, rewardPoints: req.body.rewardPoints, status: 'OPEN' });
+    // populated
+    await bounty.populate('creatorId', 'name avatar');
+    res.json(bounty);
+  } catch (err) { res.status(500).send('Server Error'); }
+});
+
+// @route   POST /api/gamification/endorse/:userId
+router.post('/endorse/:userId', protect, async (req, res) => {
+  try {
+    const { skill } = req.body;
+    if (req.user.id === req.params.userId) return res.status(400).json({ message: "Cannot endorse yourself" });
+    const existing = await Endorsement.findOne({ endorserId: req.user.id, recipientId: req.params.userId, skill });
+    if (existing) return res.status(400).json({ message: "Already endorsed for this skill" });
+    
+    const endorsement = await Endorsement.create({
+      endorserId: req.user.id,
+      recipientId: req.params.userId,
+      skill
+    });
+    // Add XP to the recipient
+    const recipient = await User.findById(req.params.userId);
+    if (recipient) {
+      recipient.xp += 50; 
+      recipient.level = Math.floor(recipient.xp / 1000) + 1;
+      await recipient.save();
+    }
+    res.json(endorsement);
+  } catch (err) { res.status(500).send('Server Error'); }
+});
+
+// @route   GET /api/gamification/endorsements/:userId
+router.get('/endorsements/:userId', protect, async (req, res) => {
+  try {
+    const endorsements = await Endorsement.find({ recipientId: req.params.userId }).populate('endorserId', 'name avatar');
+    res.json(endorsements);
+  } catch (err) { res.status(500).send('Server Error'); }
 });
 
 module.exports = router;

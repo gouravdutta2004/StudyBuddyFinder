@@ -24,6 +24,7 @@ import Messages from './pages/Messages';
 import Support from './pages/Support';
 import UserProfile from './pages/UserProfile';
 import EditProfile from './pages/EditProfile';
+import PomodoroFocus from './pages/PomodoroFocus'; // Added
 import AdminPanel from './pages/AdminPanel';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
@@ -36,12 +37,33 @@ import GroupDetails from './pages/GroupDetails';
 
 import AIAssistantWidget from './components/AIAssistantWidget';
 import CustomCursor from './components/CustomCursor';
+import CommandPalette from './components/CommandPalette';
+import React from 'react';
+
+class GlobalErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { error: null }; }
+  static getDerivedStateFromError(error) { return { error }; }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{ color: '#fff', padding: '2rem', background: '#991b1b', zIndex: 99999, position: 'fixed', inset: 0, overflow: 'auto' }}>
+          <h1 style={{ fontWeight: 900 }}>Fatal React Component Crash</h1>
+          <p style={{ fontWeight: 700, fontSize: '1.25rem' }}>{this.state.error.message}</p>
+          <pre style={{ fontSize: '1rem', whiteSpace: 'pre-wrap', background: 'rgba(0,0,0,0.5)', padding: '1rem', borderRadius: '8px' }}>{this.state.error.stack}</pre>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const Layout = ({ children }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: (theme) => theme.palette.mode === 'dark' ? '#020617' : '#f8f9fa' }}>
+      <CommandPalette />
+
       {/* Mobile Drawer */}
       <Drawer anchor="left" open={mobileOpen} onClose={() => setMobileOpen(false)} PaperProps={{ sx: { width: 280, border: 'none' } }}>
         <Sidebar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
@@ -70,6 +92,7 @@ export default function App() {
 
   return (
     <GoogleOAuthProvider clientId={clientId}>
+      <GlobalErrorBoundary>
       <ThemeProvider>
       <CustomCursor />
       <AuthProvider>
@@ -92,6 +115,7 @@ export default function App() {
               <Route path="/groups" element={<ProtectedRoute><Layout><PublicGroups /></Layout></ProtectedRoute>} />
               <Route path="/groups/:id" element={<ProtectedRoute><Layout><GroupDetails /></Layout></ProtectedRoute>} />
               <Route path="/study-room/:id" element={<ProtectedRoute><Layout><StudyRoom /></Layout></ProtectedRoute>} />
+              <Route path="/focus" element={<ProtectedRoute><Layout><PomodoroFocus /></Layout></ProtectedRoute>} />
               <Route path="/messages" element={<ProtectedRoute><Layout><Messages /></Layout></ProtectedRoute>} />
               <Route path="/support" element={<ProtectedRoute><Layout><Support /></Layout></ProtectedRoute>} />
               <Route path="/user/:id" element={<ProtectedRoute><Layout><UserProfile /></Layout></ProtectedRoute>} />
@@ -105,6 +129,7 @@ export default function App() {
         </SocketProvider>
       </AuthProvider>
     </ThemeProvider>
+    </GlobalErrorBoundary>
     </GoogleOAuthProvider>
   );
 }

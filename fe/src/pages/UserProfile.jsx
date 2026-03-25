@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
-import { User, MapPin, GraduationCap, BookOpen, MessageCircle, UserPlus, Pencil, UserMinus, Trophy, Flame, Clock, Star } from 'lucide-react';
+import { User, MapPin, GraduationCap, BookOpen, MessageCircle, UserPlus, Pencil, UserMinus, Trophy, Flame, Clock, Star, Github, Linkedin, Instagram, BadgeCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ActivityHeatmap from '../components/profile/ActivityHeatmap';
+import MindMapModal from '../components/profile/MindMapModal';
 import { Container, Card, Box, Avatar, Typography, Button, IconButton, Chip, Grid, LinearProgress, useTheme, CardContent, CircularProgress } from '@mui/material';
 
 export default function UserProfile() {
@@ -16,17 +17,21 @@ export default function UserProfile() {
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState(false);
   const [ratings, setRatings] = useState({ average: 0, count: 0, reviews: [] });
+  const [endorsements, setEndorsements] = useState([]);
+  const [mapOpen, setMapOpen] = useState(false);
   const theme = useTheme();
 
   useEffect(() => {
     if (!targetId) return;
     Promise.all([
       api.get(`/users/${targetId}`),
-      api.get(`/ratings/${targetId}`)
+      api.get(`/ratings/${targetId}`),
+      api.get(`/gamification/endorsements/${targetId}`)
     ])
-      .then(([profileRes, ratingsRes]) => {
+      .then(([profileRes, ratingsRes, endoRes]) => {
         setProfile(profileRes.data);
         setRatings(ratingsRes.data);
+        setEndorsements(endoRes.data);
       })
       .catch((err) => {
          console.error(err);
@@ -134,10 +139,69 @@ export default function UserProfile() {
                   </Typography>
                 )}
               </Box>
+              
+              {/* Trust Badges */}
+              {profile.socialLinks && (profile.socialLinks.github || profile.socialLinks.linkedin || profile.socialLinks.instagram || profile.isVerified) && (
+                <Box sx={{ display: 'flex', gap: 1.5, mt: 2, alignItems: 'center' }}>
+                  {profile.isVerified && (
+                    <Chip size="small" icon={<BadgeCheck size={14} color="#3b82f6" />} label="Verified Scholar" sx={{ bgcolor: 'rgba(59,130,246,0.1)', color: '#3b82f6', fontWeight: 800, borderRadius: 1.5, '& .MuiChip-icon': { color: '#3b82f6' } }} />
+                  )}
+                  {profile.socialLinks.github && (
+                    <IconButton size="small" component="a" href={`https://github/${profile.socialLinks.github}`} target="_blank" sx={{ bgcolor: 'rgba(255,255,255,0.05)' }}>
+                      <Github size={18} />
+                    </IconButton>
+                  )}
+                  {profile.socialLinks.linkedin && (
+                    <IconButton size="small" component="a" href={`https://linkedin.com/in/${profile.socialLinks.linkedin}`} target="_blank" sx={{ bgcolor: 'rgba(255,255,255,0.05)' }}>
+                      <Linkedin size={18} color="#0a66c2" />
+                    </IconButton>
+                  )}
+                  {profile.socialLinks.instagram && (
+                    <IconButton size="small" component="a" href={`https://instagram.com/${profile.socialLinks.instagram}`} target="_blank" sx={{ bgcolor: 'rgba(255,255,255,0.05)' }}>
+                      <Instagram size={18} color="#e1306c" />
+                    </IconButton>
+                  )}
+                </Box>
+              )}
             </Box>
 
             {/* Tactical Engagements */}
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, width: { xs: '100%', sm: 'auto' } }}>
+              <Button 
+                variant="outlined" 
+                onClick={async () => {
+                   const toastId = toast.loading('Generating Secure Academic Resume...');
+                   try {
+                     const { jsPDF } = await import('jspdf');
+                     const doc = new jsPDF();
+                     doc.setFont('helvetica', 'bold');
+                     doc.setFontSize(22);
+                     doc.text(`${profile.name} - Academic Portfolio`, 20, 20);
+                     doc.setFontSize(12);
+                     doc.setFont('helvetica', 'normal');
+                     doc.text(`University: ${profile.university || 'N/A'}`, 20, 35);
+                     doc.text(`Location: ${profile.location || 'N/A'}`, 20, 45);
+                     doc.text(`Total Study Hours: ${profile.studyHours || 0} hrs`, 20, 55);
+                     doc.text(`Current Streak: ${profile.streak || 0} days`, 20, 65);
+                     doc.text(`League: ${profile.league || 'BRONZE'}`, 20, 75);
+                     doc.text(`Subjects Mastered: ${profile.subjects?.join(', ') || 'None'}`, 20, 85);
+                     doc.text(`Cognitive Style: ${profile.studyStyle}`, 20, 95);
+                     doc.text(`Badges: ${profile.badges?.join(', ') || 'None'}`, 20, 105);
+                     
+                     doc.setFont('helvetica', 'italic');
+                     doc.text(`"Verified on Study Buddy Finder Framework"`, 20, 280);
+                     
+                     doc.save(`${profile.name.replace(/\s+/g, '_')}_Academic_Resume.pdf`);
+                     toast.success('Resume Decrypted & Exported successfully!', { id: toastId });
+                   } catch (err) {
+                     toast.error('Failed to generate PDF matrix.', { id: toastId });
+                   }
+                }}
+                sx={{ flex: { xs: 1, sm: 'none' }, borderRadius: 2, fontWeight: 700, borderColor: 'primary.main', color: 'primary.main' }}
+              >
+                📥 Export Resume 
+              </Button>
+              
               {(targetId === me?._id || me?.isAdmin) && (
                 <Button 
                   variant="outlined" 
@@ -248,9 +312,14 @@ export default function UserProfile() {
           <Grid container spacing={3} sx={{ mt: 1 }}>
             <Grid item xs={12} md={6}>
               <Card variant="outlined" sx={{ borderRadius: 4, height: '100%', p: 3, bgcolor: 'background.paper', '&:hover': { boxShadow: theme.shadows[2] }, transition: 'box-shadow 0.2s' }}>
-                <Typography variant="h6" fontWeight={800} color="text.primary" display="flex" alignItems="center" gap={1} pb={2} mb={2} borderBottom={1} borderColor="divider">
-                  <BookOpen size={20} color={theme.palette.secondary.main} /> Academic Mastery
-                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 2, mb: 2, borderBottom: 1, borderColor: 'divider' }}>
+                  <Typography variant="h6" fontWeight={800} color="text.primary" display="flex" alignItems="center" gap={1}>
+                    <BookOpen size={20} color={theme.palette.secondary.main} /> Academic Mastery
+                  </Typography>
+                  <Button size="small" variant="outlined" onClick={() => setMapOpen(true)} sx={{ borderRadius: '100px', fontWeight: 800 }}>
+                    🧠 Neural Map
+                  </Button>
+                </Box>
                 {profile.subjects?.length > 0 ? (
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                     {profile.subjects.map(s => (
@@ -260,6 +329,40 @@ export default function UserProfile() {
                 ) : (
                   <Typography variant="body2" color="text.disabled" fontStyle="italic">No subjects added.</Typography>
                 )}
+
+                {/* Endorsements System */}
+                <Box sx={{ mt: 4, pt: 3, borderTop: 1, borderColor: 'divider' }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                    <Typography variant="subtitle2" fontWeight={800} color="text.primary">Endorsements</Typography>
+                    {targetId !== me?._id && (
+                      <Button onClick={() => {
+                        const skill = window.prompt("What subject/skill are you endorsing them for?");
+                        if (!skill) return;
+                        api.post(`/gamification/endorse/${targetId}`, { skill })
+                          .then(res => {
+                            toast.success(`Endorsed ${profile.name} for ${skill}!`);
+                            setEndorsements([...endorsements, { ...res.data, endorserId: me }]);
+                          })
+                          .catch(() => toast.error('Failed or already endorsed'));
+                      }} size="small" variant="outlined" sx={{ borderRadius: 2, fontWeight: 700 }}>
+                        + Endorse
+                      </Button>
+                    )}
+                  </Box>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    {endorsements.length === 0 ? (
+                       <Typography variant="caption" color="text.secondary">No endorsements yet.</Typography>
+                    ) : (
+                      // Group by skill and count
+                      Object.entries(endorsements.reduce((acc, current) => {
+                        acc[current.skill] = (acc[current.skill] || 0) + 1;
+                        return acc;
+                      }, {})).map(([skill, count]) => (
+                        <Chip key={skill} label={`${skill} ${count > 1 ? `x${count}` : ''}`} sx={{ fontWeight: 700, borderRadius: 1.5, bgcolor: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }} size="small" />
+                      ))
+                    )}
+                  </Box>
+                </Box>
               </Card>
             </Grid>
 
@@ -292,6 +395,9 @@ export default function UserProfile() {
 
         </Box>
       </Card>
+      
+      {/* Mind Map Dialog */}
+      <MindMapModal open={mapOpen} onClose={() => setMapOpen(false)} user={profile} />
     </Container>
   );
 }

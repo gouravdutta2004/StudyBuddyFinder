@@ -10,7 +10,7 @@ const ArrowIcon = ({ isDark, isHovering }) => (
       stroke={isDark ? '#020617' : '#ffffff'}
       strokeWidth="1.5"
       strokeLinejoin="round"
-      style={{ filter: 'drop-shadow(2px 6px 8px rgba(0,0,0,0.5))', transition: 'fill 0.2s ease' }}
+      style={{ transition: 'fill 0.2s ease' }}
     />
   </svg>
 );

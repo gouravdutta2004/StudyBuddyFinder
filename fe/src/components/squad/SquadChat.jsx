@@ -92,9 +92,11 @@ export default function SquadChat({ groupId, subject, name }) {
                   border: isUser ? 'none' : '1px solid rgba(255,255,255,0.1)',
                   boxShadow: isUser ? '0 10px 20px -10px rgba(99, 102, 241, 0.5)' : 'none'
                 }}>
-                   <ReactMarkdown className="prose prose-sm dark:prose-invert max-w-none" components={{ p: ({node, ...props}) => <Typography variant="body2" sx={{ lineHeight: 1.6 }} {...props} /> }}>
+                  <div className="prose prose-sm dark:prose-invert max-w-none">
+                   <ReactMarkdown components={{ p: ({node, ...props}) => <Typography variant="body2" sx={{ lineHeight: 1.6 }} {...props} /> }}>
                      {msg.text || ''}
                    </ReactMarkdown>
+                  </div>
                 </Box>
               </motion.div>
             );

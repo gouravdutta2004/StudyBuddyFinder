@@ -6,6 +6,7 @@ import { Plus, X, UploadCloud, User as UserIcon, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Container, Typography, Box, Card, Avatar, Button, IconButton, TextField, MenuItem, Switch, FormControlLabel, Chip, Grid, Paper, Divider, Stack } from '@mui/material';
 import ActivityHeatmap from '../components/profile/ActivityHeatmap';
+import DragAvailabilityGrid from '../components/profile/DragAvailabilityGrid';
 
 const SUBJECTS = ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'Computer Science', 'History', 'Literature', 'Economics', 'Psychology', 'Engineering', 'Art', 'Music', 'Philosophy', 'Sociology', 'Statistics'];
 const LEVELS = ['High School', 'Undergraduate', 'Graduate', 'PhD', 'Self-Learner', 'Other'];
@@ -17,7 +18,7 @@ export default function EditProfile({ userId, onComplete }) {
   const navigate = useNavigate();
   const { id: paramId } = useParams();
   const id = paramId || userId;
-  const [form, setForm] = useState({ name: '', email: '', bio: '', avatar: '', university: '', location: '', educationLevel: 'Undergraduate', studyStyle: 'Mixed', preferOnline: true, subjects: [], availability: [], isAdmin: false, isActive: true, password: '' });
+  const [form, setForm] = useState({ name: '', email: '', bio: '', avatar: '', university: '', location: '', educationLevel: 'Undergraduate', studyStyle: 'Mixed', preferOnline: true, subjects: [], availability: [], isAdmin: false, isActive: true, password: '', socialLinks: { github: '', linkedin: '', instagram: '' } });
   const [subjectInput, setSubjectInput] = useState('');
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef(null);
@@ -53,7 +54,8 @@ export default function EditProfile({ userId, onComplete }) {
             name: u.name || '', email: u.email || '', bio: u.bio || '', avatar: u.avatar || '', 
             university: u.university || '', location: u.location || '', educationLevel: u.educationLevel || 'Undergraduate', 
             studyStyle: u.studyStyle || 'Mixed', preferOnline: u.preferOnline ?? true, subjects: u.subjects || [], 
-            availability: u.availability || [], isAdmin: u.isAdmin || false, isActive: u.isActive !== undefined ? u.isActive : true, password: '' 
+            availability: u.availability || [], isAdmin: u.isAdmin || false, isActive: u.isActive !== undefined ? u.isActive : true, password: '',
+            socialLinks: u.socialLinks || { github: '', linkedin: '', instagram: '' }
           });
         })
         .catch(() => { toast.error('Failed to load user profile'); navigate('/dashboard'); });
@@ -62,7 +64,8 @@ export default function EditProfile({ userId, onComplete }) {
         name: user.name || '', email: user.email || '', bio: user.bio || '', avatar: user.avatar || '', 
         university: user.university || '', location: user.location || '', educationLevel: user.educationLevel || 'Undergraduate', 
         studyStyle: user.studyStyle || 'Mixed', preferOnline: user.preferOnline ?? true, subjects: user.subjects || [], 
-        availability: user.availability || [], isAdmin: user.isAdmin || false, isActive: user.isActive !== undefined ? user.isActive : true, password: '' 
+        availability: user.availability || [], isAdmin: user.isAdmin || false, isActive: user.isActive !== undefined ? user.isActive : true, password: '',
+        socialLinks: user.socialLinks || { github: '', linkedin: '', instagram: '' }
       });
     }
   }, [id, user, navigate]);
@@ -253,6 +256,25 @@ export default function EditProfile({ userId, onComplete }) {
           </Grid>
         </Paper>
 
+        <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}>
+          <Typography variant="h6" fontWeight={700} mb={3}>Social Vault & Verification</Typography>
+          <Grid container spacing={3}>
+            <Grid item xs={12} sm={4}>
+              <TextField fullWidth label="GitHub Username" placeholder="e.g. torvalds" value={form.socialLinks?.github || ''} onChange={e => setForm({ ...form, socialLinks: { ...form.socialLinks, github: e.target.value }})} variant="outlined" size="small" />
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <TextField fullWidth label="LinkedIn Username" placeholder="e.g. reidhoffman" value={form.socialLinks?.linkedin || ''} onChange={e => setForm({ ...form, socialLinks: { ...form.socialLinks, linkedin: e.target.value }})} variant="outlined" size="small" />
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <TextField fullWidth label="Instagram Username" placeholder="e.g. zuck" value={form.socialLinks?.instagram || ''} onChange={e => setForm({ ...form, socialLinks: { ...form.socialLinks, instagram: e.target.value }})} variant="outlined" size="small" />
+            </Grid>
+          </Grid>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>
+            Link at least two authentic social accounts to receive the global <b>Verified Badge</b> on your profile (server recalculates automatically).
+          </Typography>
+        </Paper>
+
+
         {id ? (
           <Paper variant="outlined" sx={{ p: 3, borderRadius: 3, borderLeft: 6, borderColor: 'warning.main', bgcolor: 'warning.50' }}>
             <Typography variant="h6" fontWeight={700} color="warning.main" mb={2}>Administrative Security Override</Typography>
@@ -332,27 +354,15 @@ export default function EditProfile({ userId, onComplete }) {
         </Paper>
 
         <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-            <Typography variant="h6" fontWeight={700}>Availability</Typography>
-            <Button variant="outlined" size="small" startIcon={<Plus size={16} />} onClick={addAvailability}>Add Slot</Button>
-          </Box>
+          <Typography variant="h6" fontWeight={700} mb={1}>Super-Calendar Availability</Typography>
+          <Typography variant="body2" color="text.secondary" mb={3}>
+            Paint your free study blocks below. We auto-translate these timezones globally.
+          </Typography>
           
-          <Stack spacing={2}>
-            {form.availability.map((slot, i) => (
-              <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 2, bgcolor: 'action.hover', borderRadius: 2, flexWrap: { xs: 'wrap', sm: 'nowrap' } }}>
-                <TextField select value={slot.day} onChange={e => updateAvailability(i, 'day', e.target.value)} variant="outlined" size="small" sx={{ flex: 1, minWidth: 120 }}>
-                  {DAYS.map(d => <MenuItem key={d} value={d}>{d}</MenuItem>)}
-                </TextField>
-                <TextField type="time" value={slot.startTime} onChange={e => updateAvailability(i, 'startTime', e.target.value)} variant="outlined" size="small" sx={{ width: 140 }} />
-                <Typography variant="body2" color="text.secondary">to</Typography>
-                <TextField type="time" value={slot.endTime} onChange={e => updateAvailability(i, 'endTime', e.target.value)} variant="outlined" size="small" sx={{ width: 140 }} />
-                <IconButton onClick={() => removeAvailability(i)} color="error"><X size={20} /></IconButton>
-              </Box>
-            ))}
-          </Stack>
-          {form.availability.length === 0 && (
-            <Typography variant="body2" color="text.disabled" fontStyle="italic">No availability slots added</Typography>
-          )}
+          <DragAvailabilityGrid 
+            availability={form.availability} 
+            onChange={(avail) => setForm(f => ({ ...f, availability: avail }))} 
+          />
         </Paper>
 
         <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>

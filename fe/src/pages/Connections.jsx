@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../api/axios';
 import UserCard from '../components/UserCard';
+import ShareSquadStory from '../components/profile/ShareSquadStory';
 import { Users, UserCheck, Clock, UserMinus } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -56,7 +57,12 @@ export default function Connections() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Connections</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Connections</h1>
+        {tab === 'connections' && data.connections.length > 0 && (
+          <ShareSquadStory connections={data.connections} />
+        )}
+      </div>
       <div className="flex gap-2 mb-6 border-b border-gray-200 dark:border-gray-700">
         {tabs.map(({ key, label, count, icon: Icon }) => (
           <button key={key} onClick={() => setTab(key)}

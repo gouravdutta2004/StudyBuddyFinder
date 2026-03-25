@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Container, Typography, Grid, Button, Chip } from '@mui/material';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { Check, CreditCard, Sparkles } from 'lucide-react';
@@ -50,15 +50,79 @@ export default function Billing() {
   const [loading, setLoading] = useState(false);
   const currentPlan = user?.subscription?.plan || 'basic';
 
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    document.body.appendChild(script);
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
   const handleUpgrade = async (planKey) => {
     if (planKey === currentPlan) return toast.error('You are already on this plan');
     setLoading(true);
     try {
-      const res = await api.post('/billing/upgrade', { plan: planKey });
-      toast.success(res.data.message);
-      login({ ...user, subscription: res.data.subscription });
+      if (planKey === 'basic') {
+        toast.error('Downgrading is currently not supported automatically.');
+        setLoading(false);
+        return;
+      }
+
+      const res = await api.post('/billing/create-order', { plan: planKey });
+      const { orderId, amount, currency, key_id } = res.data;
+
+      if (key_id === 'rzp_test_mock') {
+        const verifyRes = await api.post('/billing/verify', {
+          razorpay_order_id: orderId,
+          razorpay_payment_id: `pay_mock_${Date.now()}`,
+          razorpay_signature: 'mock_signature',
+          plan: planKey
+        });
+        toast.success(verifyRes.data.message);
+        login({ ...user, subscription: verifyRes.data.subscription });
+        setLoading(false);
+        return;
+      }
+
+      const options = {
+        key: key_id,
+        amount,
+        currency,
+        name: "StudyBuddyFinder",
+        description: `Upgrade to ${planKey.toUpperCase()} tier`,
+        order_id: orderId,
+        handler: async function (response) {
+          try {
+            const verifyRes = await api.post('/billing/verify', {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              plan: planKey
+            });
+            toast.success(verifyRes.data.message);
+            login({ ...user, subscription: verifyRes.data.subscription });
+          } catch(err) {
+            toast.error(err.response?.data?.message || 'Payment verification failed');
+          }
+        },
+        prefill: {
+          name: user?.name,
+          email: user?.email,
+        },
+        theme: {
+          color: "#6366f1"
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', function (response){
+        toast.error(response.error.description);
+      });
+      rzp.open();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Upgrade failed');
+      toast.error(err.response?.data?.message || 'Action failed');
     } finally {
       setLoading(false);
     }

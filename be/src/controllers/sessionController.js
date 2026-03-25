@@ -2,13 +2,28 @@ const Session = require('../models/Session');
 
 const createSession = async (req, res) => {
   try {
-    const { title, description, subject, scheduledAt, duration, isOnline, meetingLink, location, maxParticipants } = req.body;
+    const { title, description, subject, scheduledAt, duration, isOnline, meetingLink, location, maxParticipants, recurrence } = req.body;
     const session = await Session.create({
-      title, description, subject, scheduledAt, duration, isOnline, meetingLink, location, maxParticipants,
+      title, description, subject, scheduledAt, duration, isOnline, meetingLink, location, maxParticipants, recurrence: recurrence || 'NONE',
       host: req.user._id,
       participants: [req.user._id]
     });
     await session.populate('host', 'name avatar');
+    
+    if (recurrence === 'WEEKLY') {
+      const clonedSessions = [];
+      const baseDate = new Date(scheduledAt);
+      for (let i = 1; i <= 4; i++) {
+        const nextDate = new Date(baseDate.getTime() + (i * 7 * 24 * 60 * 60 * 1000));
+        clonedSessions.push({
+          title, description, subject, scheduledAt: nextDate, duration, isOnline, meetingLink, location, maxParticipants, recurrence: 'WEEKLY',
+          host: req.user._id,
+          participants: [req.user._id]
+        });
+      }
+      await Session.insertMany(clonedSessions);
+    }
+    
     res.status(201).json(session);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -115,4 +130,21 @@ const addNote = async (req, res) => {
   }
 };
 
-module.exports = { createSession, getSessions, getMySessions, joinSession, leaveSession, deleteSession, addNote };
+const rsvpSession = async (req, res) => {
+  try {
+    const { status } = req.body; // 'ATTENDING', 'PENDING', 'DECLINED'
+    const session = await Session.findById(req.params.id);
+    if (!session) return res.status(404).json({ message: 'Session not found' });
+    
+    // Remove existing RSVP for this user
+    session.rsvps = session.rsvps.filter(r => r.userId.toString() !== req.user._id.toString());
+    session.rsvps.push({ userId: req.user._id, status });
+    await session.save();
+    
+    res.json({ message: `RSVP updated to ${status}` });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+module.exports = { createSession, getSessions, getMySessions, joinSession, leaveSession, deleteSession, addNote, rsvpSession };

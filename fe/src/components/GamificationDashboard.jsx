@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 import { Flame, Star, Target, Plus, CheckCircle, Circle, X as XIcon, Zap, TrendingUp } from 'lucide-react';
@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { Box, Card, CardContent, Typography, Grid, Button, TextField, LinearProgress, IconButton, useTheme, Chip, Stack } from '@mui/material';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 import { motion } from 'framer-motion';
+import WeeklyRecapModal from './profile/WeeklyRecapModal';
 
 export default function GamificationDashboard() {
   const { user, setUser } = useAuth();
@@ -60,13 +61,37 @@ export default function GamificationDashboard() {
     } catch (err) { toast.error('Failed to delete goal'); }
   };
 
+  const [quests, setQuests] = useState([]);
+  const [recapOpen, setRecapOpen] = useState(false);
+
+  useEffect(() => {
+    const fetchQuests = async () => {
+      try {
+        const res = await api.get('/gamification/quests');
+        setQuests(res.data);
+      } catch (err) { console.error('Failed to load quests', err); }
+    };
+    fetchQuests();
+  }, []);
+
+  const handleCompleteQuest = async (questId) => {
+    try {
+      const res = await api.put(`/gamification/quests/${questId}`);
+      setQuests(q => q.map(x => x._id === questId ? res.data : x));
+      toast.success('Quest completed! +50 XP');
+      // Optimistically update local XP
+      setUser({ ...user, xp: (user.xp || 0) + 50 });
+    } catch (err) { toast.error('Failed to complete quest'); }
+  };
+
   return (
     <Box>
+      <WeeklyRecapModal open={recapOpen} onClose={() => setRecapOpen(false)} />
       {/* Top Banner: Level & XP animated Progress */}
       <Card component={motion.div} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} sx={{ mb: 3, borderRadius: 4, background: 'linear-gradient(135deg, rgba(37,99,235,0.1) 0%, rgba(124,58,237,0.1) 100%)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)' }}>
         <CardContent sx={{ p: { xs: 3, md: 4 } }}>
           <Grid container spacing={3} alignItems="center">
-            <Grid size={{ xs: 12, md: 2 }} sx={{ textAlign: 'center' }}>
+            <Grid item xs={12} md={2} sx={{ textAlign: 'center' }}>
               <Box sx={{ position: 'relative', display: 'inline-flex' }}>
                 <Box sx={{ width: 80, height: 80, borderRadius: '50%', border: '4px solid', borderColor: 'primary.main', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'background.paper', boxShadow: '0 0 20px rgba(59,130,246,0.3)' }}>
                   <Typography variant="h4" fontWeight={900} color="primary.main">{level}</Typography>
@@ -74,12 +99,17 @@ export default function GamificationDashboard() {
               </Box>
               <Typography variant="subtitle2" fontWeight={800} mt={1} color="text.secondary" textTransform="uppercase">Current Level</Typography>
             </Grid>
-            <Grid size={{ xs: 12, md: 10 }}>
+            <Grid item xs={12} md={8}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
                 <Typography variant="h6" fontWeight={800} display="flex" alignItems="center" gap={1}><Zap size={20} color={theme.palette.warning.main} /> {xp} XP Total</Typography>
                 <Typography variant="subtitle2" fontWeight={700} color="text.secondary">{1000 - (xp % 1000)} XP to Next Level</Typography>
               </Box>
               <LinearProgress variant="determinate" value={xpProgress} sx={{ height: 14, borderRadius: 7, bgcolor: 'rgba(0,0,0,0.1)', '& .MuiLinearProgress-bar': { borderRadius: 7, backgroundImage: 'linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%)' } }} />
+            </Grid>
+            <Grid item xs={12} md={2} sx={{ textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+               <Button variant="contained" color="secondary" onClick={() => setRecapOpen(true)} sx={{ borderRadius: '100px', fontWeight: 800, textTransform: 'none', boxShadow: theme.shadows[10], p: 1.5 }}>
+                  Weekly Recap
+               </Button>
             </Grid>
           </Grid>
         </CardContent>
@@ -87,7 +117,7 @@ export default function GamificationDashboard() {
 
       <Grid container spacing={3}>
         {/* Achievements & Badges */}
-        <Grid size={{ xs: 12, lg: 6 }}>
+        <Grid item xs={12} lg={6}>
           <Card sx={{ height: '100%', borderRadius: 4 }}>
             <CardContent sx={{ p: 2.5, sm: { p: 3 }, height: '100%', display: 'flex', flexDirection: 'column' }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
@@ -121,7 +151,7 @@ export default function GamificationDashboard() {
         </Grid>
 
         {/* Study Analytics Chart */}
-        <Grid size={{ xs: 12, lg: 6 }}>
+        <Grid item xs={12} lg={6}>
           <Card sx={{ height: '100%', borderRadius: 4 }}>
             <CardContent sx={{ p: 2.5, sm: { p: 3 }, height: '100%', display: 'flex', flexDirection: 'column' }}>
               <Typography variant="h6" fontWeight={800} display="flex" alignItems="center" gap={1.5} mb={3}>
@@ -152,7 +182,7 @@ export default function GamificationDashboard() {
         </Grid>
 
         {/* Weekly Goals */}
-        <Grid size={{ xs: 12 }}>
+        <Grid item xs={12}>
           <Card sx={{ borderRadius: 4 }}>
             <CardContent sx={{ p: 2.5, sm: { p: 3 } }}>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
@@ -167,13 +197,13 @@ export default function GamificationDashboard() {
               {isAddingGoal && (
                 <Box component="form" onSubmit={handleAddGoal} sx={{ mb: 4, bgcolor: 'background.default', p: 3, borderRadius: 3, border: 1, borderColor: 'divider' }}>
                   <Grid container spacing={2}>
-                    <Grid size={{ xs: 12 }}>
+                    <Grid item xs={12}>
                       <TextField fullWidth size="small" placeholder="Goal Title (e.g. Master Calculus)" value={newGoalTitle} onChange={e => setNewGoalTitle(e.target.value)} />
                     </Grid>
-                    <Grid size={{ xs: 8, sm: 9 }}>
+                    <Grid item xs={8} sm={9}>
                       <TextField fullWidth size="small" type="number" placeholder="Target Hrs/Wk" inputProps={{ min: 1 }} value={newGoalTarget} onChange={e => setNewGoalTarget(e.target.value)} />
                     </Grid>
-                    <Grid size={{ xs: 4, sm: 3 }}>
+                    <Grid item xs={4} sm={3}>
                       <Button type="submit" variant="contained" fullWidth sx={{ height: '100%', fontWeight: 700 }}>Commit</Button>
                     </Grid>
                   </Grid>
@@ -182,12 +212,12 @@ export default function GamificationDashboard() {
 
               <Grid container spacing={2}>
                 {goals.length === 0 ? (
-                  <Grid size={{ xs: 12 }}>
+                  <Grid item xs={12}>
                     <Typography variant="body2" color="text.secondary" fontStyle="italic" textAlign="center" py={2}>No active objectives. Discipline begins with a target!</Typography>
                   </Grid>
                 ) : (
                   goals.map((goal) => (
-                    <Grid size={{ xs: 12, md: 6 }} key={goal._id}>
+                    <Grid item xs={12} md={6} key={goal._id}>
                       <Box sx={{
                         bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
                         p: 2.5, borderRadius: 3, border: 1, borderColor: goal.isCompleted ? 'success.main' : 'divider',
@@ -217,6 +247,46 @@ export default function GamificationDashboard() {
                     </Grid>
                   ))
                 )}
+              </Grid>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Daily Quests */}
+        <Grid item xs={12}>
+          <Card sx={{ borderRadius: 4, bgcolor: theme.palette.mode === 'dark' ? 'rgba(99, 102, 241, 0.05)' : 'rgba(99, 102, 241, 0.02)' }}>
+            <CardContent sx={{ p: 2.5, sm: { p: 3 } }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+                <Typography variant="h6" fontWeight={800} display="flex" alignItems="center" gap={1.5}>
+                  <Target size={24} color={theme.palette.primary.main} /> Daily Quests
+                </Typography>
+                <Chip label={`${quests.filter(q => q.isCompleted).length}/${quests.length} Completed`} color="primary" sx={{ fontWeight: 800, borderRadius: 2 }} />
+              </Box>
+
+              <Grid container spacing={2}>
+                {quests.map((quest) => (
+                  <Grid item xs={12} md={4} key={quest._id}>
+                    <Box sx={{
+                      bgcolor: theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.2)' : 'white',
+                      p: 2, borderRadius: 3, border: 1, borderColor: quest.isCompleted ? 'success.main' : 'divider',
+                      display: 'flex', alignItems: 'center', gap: 2, transition: 'all 0.2s',
+                    }}>
+                      <IconButton 
+                        onClick={() => !quest.isCompleted && handleCompleteQuest(quest._id)}
+                        sx={{ bgcolor: quest.isCompleted ? 'success.light' : 'action.hover', color: quest.isCompleted ? 'success.dark' : 'text.disabled' }}
+                        disabled={quest.isCompleted}
+                      >
+                        {quest.isCompleted ? <CheckCircle size={24} /> : <Circle size={24} />}
+                      </IconButton>
+                      <Box flex={1}>
+                        <Typography variant="subtitle2" fontWeight={700} color={quest.isCompleted ? 'text.secondary' : 'text.primary'} sx={{ textDecoration: quest.isCompleted ? 'line-through' : 'none' }}>
+                          {quest.task}
+                        </Typography>
+                        <Typography variant="caption" color="primary" fontWeight={800}>+50 XP</Typography>
+                      </Box>
+                    </Box>
+                  </Grid>
+                ))}
               </Grid>
             </CardContent>
           </Card>

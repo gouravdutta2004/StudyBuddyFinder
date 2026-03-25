@@ -22,5 +22,6 @@ router.post('/accept/:userId', protect, acceptRequest);
 router.post('/reject/:userId', protect, rejectRequest);
 router.post('/disconnect/:userId', protect, disconnectUser);
 router.post('/log-study', protect, logStudy);
+router.post('/sync-github', protect, require('../controllers/userController').syncGithub);
 
 module.exports = router;

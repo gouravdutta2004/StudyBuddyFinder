@@ -17,6 +17,11 @@ const sessionSchema = new mongoose.Schema({
       url: String,
       name: String,
       uploadedBy: String
+  }],
+  recurrence: { type: String, enum: ['NONE', 'WEEKLY'], default: 'NONE' },
+  rsvps: [{
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    status: { type: String, enum: ['ATTENDING', 'PENDING', 'DECLINED'], default: 'PENDING' }
   }]
 }, { timestamps: true });
 

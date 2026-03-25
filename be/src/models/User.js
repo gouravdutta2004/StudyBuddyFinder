@@ -32,12 +32,22 @@ const userSchema = new mongoose.Schema({
   isActive: { type: Boolean, default: true },
   resetPasswordToken: String,
   resetPasswordExpire: Date,
+  major: { type: String, default: '' },
+  currentStreak: { type: Number, default: 0 },
+  league: { type: String, enum: ['BRONZE', 'SILVER', 'GOLD', 'ELITE'], default: 'BRONZE' },
+  totalStudyHours: { type: Number, default: 0 },
   studyHours: { type: Number, default: 0 },
   streak: { type: Number, default: 0 },
   lastStudyDate: { type: Date, default: null },
   xp: { type: Number, default: 0 },
   level: { type: Number, default: 1 },
   badges: [{ type: String }],
+  socialLinks: {
+    github: { type: String, default: '' },
+    linkedin: { type: String, default: '' },
+    instagram: { type: String, default: '' }
+  },
+  isVerified: { type: Boolean, default: false },
   weeklyGoals: [{
     title: { type: String, required: true },
     targetHours: { type: Number, required: true },

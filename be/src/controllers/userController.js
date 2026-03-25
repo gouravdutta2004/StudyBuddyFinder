@@ -28,12 +28,20 @@ const updateProfile = async (req, res) => {
     const user = await User.findById(req.user._id).select('-password');
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    const fields = ['name', 'bio', 'avatar', 'subjects', 'educationLevel', 'university', 'location', 'studyStyle', 'availability', 'preferOnline'];
+    const fields = ['name', 'bio', 'avatar', 'subjects', 'educationLevel', 'university', 'location', 'studyStyle', 'availability', 'preferOnline', 'socialLinks'];
     fields.forEach(f => {
       if (req.body[f] !== undefined) {
         user[f] = req.body[f];
       }
     });
+
+    if (user.socialLinks) {
+      let count = 0;
+      if (user.socialLinks.github?.trim()) count++;
+      if (user.socialLinks.linkedin?.trim()) count++;
+      if (user.socialLinks.instagram?.trim()) count++;
+      user.isVerified = count >= 2;
+    }
 
     const updatedUser = await user.save();
     res.json(updatedUser);
@@ -74,41 +82,33 @@ const getMatches = async (req, res) => {
     const scoredMatches = candidates.map(c => {
       let score = 0;
       
-      if (me.subjects && c.subjects) {
+      // +40% for shared subjects
+      if (me.subjects && c.subjects && me.subjects.length > 0) {
         const sharedSubjects = me.subjects.filter(s => c.subjects.includes(s));
-        score += sharedSubjects.length * 10; // High weight for shared subjects
+        if (sharedSubjects.length > 0) {
+           // Provide up to 40% proportional to shared subjects, or flat 40 if 100% matched
+           score += Math.min(40, (sharedSubjects.length / me.subjects.length) * 40);
+        }
       }
       
-      if (me.university && c.university && me.university.toLowerCase().trim() === c.university.toLowerCase().trim()) {
-        score += 15; // Massive weight for same university
+      // +30% for same major
+      if (me.major && c.major && me.major.trim() !== '' && me.major.toLowerCase().trim() === c.major.toLowerCase().trim()) {
+        score += 30;
       }
       
-      if (me.location && c.location && me.location.toLowerCase().trim() === c.location.toLowerCase().trim()) {
-        score += 5; // Local area proximity
-      }
-      
-      if (me.studyStyle && c.studyStyle && me.studyStyle === c.studyStyle) {
-        score += 5; // Personality/Style match
-      }
-
-      if (me.educationLevel && c.educationLevel && me.educationLevel === c.educationLevel) {
-        score += 5; // Peer alignment
-      }
-      
-      // Availability Overlap Scoring
+      // +30% for overlapping schedules
       if (me.availability && me.availability.length > 0 && c.availability && c.availability.length > 0) {
         let overlapFound = false;
         me.availability.forEach(mAvail => {
             const hasMatch = c.availability.find(cAvail => cAvail.day === mAvail.day);
             if (hasMatch) {
-              score += 5; // Extra points for same day availability
               overlapFound = true;
             }
         });
-        if (overlapFound) score += 5;
+        if (overlapFound) score += 30;
       }
       
-      return { ...c, matchScore: score };
+      return { ...c, matchScore: Math.round(score), matchPercentage: Math.round(score) };
     });
 
     const filteredAndSorted = scoredMatches
@@ -333,4 +333,28 @@ const getQuickPeek = async (req, res) => {
   }
 };
 
-module.exports = { getProfile, updateProfile, searchUsers, getMatches, sendRequest, acceptRequest, rejectRequest, getConnections, disconnectUser, submitFeedback, getPublicSubjects, getSupportAdmin, logStudy, getLeaderboard, getQuickPeek };
+const syncGithub = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user.socialLinks || !user.socialLinks.github) {
+      return res.status(400).json({ message: 'GitHub username not linked prior to sync' });
+    }
+    const username = user.socialLinks.github.trim();
+    // Native node 18+ fetch
+    const response = await fetch(`https://api.github.com/users/${username}/events/public`);
+    if (!response.ok) return res.status(400).json({ message: 'Failed to access remote GitHub history' });
+    
+    const events = await response.json();
+    const dates = events.map(e => new Date(e.created_at));
+    
+    // Merge dates securely limits massive array overhead
+    user.activityLog = [...(user.activityLog || []), ...dates].slice(-500); 
+    await user.save();
+    
+    res.json({ message: 'GitHub coordinates synched deeply into heatmap!', activityLog: user.activityLog });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+module.exports = { getProfile, updateProfile, searchUsers, getMatches, sendRequest, acceptRequest, rejectRequest, getConnections, disconnectUser, submitFeedback, getPublicSubjects, getSupportAdmin, logStudy, getLeaderboard, getQuickPeek, syncGithub };
