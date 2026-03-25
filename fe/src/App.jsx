@@ -34,6 +34,7 @@ import Onboarding from './pages/Onboarding';
 import Leaderboard from './pages/Leaderboard';
 import GlobalAnnouncementBanner from './components/GlobalAnnouncementBanner';
 import GroupDetails from './pages/GroupDetails';
+import StudyMap from './pages/StudyMap';
 
 import AIAssistantWidget from './components/AIAssistantWidget';
 import CustomCursor from './components/CustomCursor';
@@ -114,6 +115,7 @@ export default function App() {
               <Route path="/leaderboard" element={<ProtectedRoute><Layout><Leaderboard /></Layout></ProtectedRoute>} />
               <Route path="/groups" element={<ProtectedRoute><Layout><PublicGroups /></Layout></ProtectedRoute>} />
               <Route path="/groups/:id" element={<ProtectedRoute><Layout><GroupDetails /></Layout></ProtectedRoute>} />
+              <Route path="/map" element={<ProtectedRoute><Layout><StudyMap /></Layout></ProtectedRoute>} />
               <Route path="/study-room/:id" element={<ProtectedRoute><Layout><StudyRoom /></Layout></ProtectedRoute>} />
               <Route path="/focus" element={<ProtectedRoute><Layout><PomodoroFocus /></Layout></ProtectedRoute>} />
               <Route path="/messages" element={<ProtectedRoute><Layout><Messages /></Layout></ProtectedRoute>} />

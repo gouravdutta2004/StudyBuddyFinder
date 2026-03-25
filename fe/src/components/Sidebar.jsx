@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, useTheme, ButtonBase } from '@mui/material';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
-import { BookOpen, Search, Users, Trophy, Calendar, Globe, MessageCircle, CreditCard } from 'lucide-react';
+import { BookOpen, Search, Users, Trophy, Calendar, Globe, MessageCircle, CreditCard, MapPin } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const navLinks = [
@@ -11,6 +11,7 @@ const navLinks = [
   { to: '/leaderboard', icon: Trophy, label: 'Leaderboard' },
   { to: '/sessions', icon: Calendar, label: 'Sessions' },
   { to: '/groups', icon: Globe, label: 'Squads' },
+  { to: '/map', icon: MapPin, label: 'Nearby Map' },
   { to: '/messages', icon: MessageCircle, label: 'Messages' },
   { to: '/connections', icon: Users, label: 'Connections' },
   { to: '/billing', icon: CreditCard, label: 'Billing' },

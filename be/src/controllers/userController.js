@@ -372,4 +372,42 @@ const syncGithub = async (req, res) => {
   }
 };
 
-module.exports = { getProfile, updateProfile, searchUsers, getMatches, sendRequest, acceptRequest, rejectRequest, getConnections, disconnectUser, submitFeedback, getPublicSubjects, getSupportAdmin, logStudy, getLeaderboard, getQuickPeek, syncGithub };
+const updateLocation = async (req, res) => {
+  try {
+    const { lat, lng } = req.body;
+    if (lat === undefined || lng === undefined) {
+      return res.status(400).json({ message: 'lat and lng are required' });
+    }
+    await User.findByIdAndUpdate(req.user._id, {
+      geoLocation: { type: 'Point', coordinates: [parseFloat(lng), parseFloat(lat)] }
+    });
+    res.json({ message: 'Location updated' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const getNearbyUsers = async (req, res) => {
+  try {
+    const { lat, lng, radius = 10000 } = req.query; // radius in metres, default 10km
+    if (!lat || !lng) return res.status(400).json({ message: 'lat and lng are required' });
+
+    const users = await User.find({
+      _id: { $ne: req.user._id },
+      isActive: true,
+      isAdmin: { $ne: true },
+      geoLocation: {
+        $near: {
+          $geometry: { type: 'Point', coordinates: [parseFloat(lng), parseFloat(lat)] },
+          $maxDistance: parseInt(radius)
+        }
+      }
+    }).select('name avatar subjects university level xp studyStyle geoLocation').limit(50);
+
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+module.exports = { getProfile, updateProfile, searchUsers, getMatches, sendRequest, acceptRequest, rejectRequest, getConnections, disconnectUser, submitFeedback, getPublicSubjects, getSupportAdmin, logStudy, getLeaderboard, getQuickPeek, syncGithub, updateLocation, getNearbyUsers };

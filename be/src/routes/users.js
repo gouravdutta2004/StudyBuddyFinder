@@ -3,7 +3,8 @@ const { protect } = require('../middleware/auth');
 const {
   getProfile, updateProfile, searchUsers, getMatches,
   sendRequest, acceptRequest, rejectRequest, getConnections, disconnectUser,
-  submitFeedback, getPublicSubjects, logStudy, getLeaderboard
+  submitFeedback, getPublicSubjects, logStudy, getLeaderboard,
+  updateLocation, getNearbyUsers
 } = require('../controllers/userController');
 
 router.post('/feedback', protect, submitFeedback);
@@ -23,5 +24,7 @@ router.post('/reject/:userId', protect, rejectRequest);
 router.post('/disconnect/:userId', protect, disconnectUser);
 router.post('/log-study', protect, logStudy);
 router.post('/sync-github', protect, require('../controllers/userController').syncGithub);
+router.get('/nearby', protect, getNearbyUsers);
+router.put('/profile/location', protect, updateLocation);
 
 module.exports = router;

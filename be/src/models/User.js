@@ -55,11 +55,19 @@ const userSchema = new mongoose.Schema({
     isCompleted: { type: Boolean, default: false }
   }],
   activityLog: [{ type: Date }], // For GitHub-style heatmap
+  geoLocation: {
+    type: { type: String, enum: ['Point'], default: 'Point' },
+    coordinates: { type: [Number], default: undefined } // [lng, lat]
+  },
   subscription: {
     plan: { type: String, enum: ['basic', 'pro', 'squad'], default: 'basic' },
     activeUntil: { type: Date }
   }
 }, { timestamps: true });
+
+// 2dsphere index for geospatial $near queries
+userSchema.index({ geoLocation: '2dsphere' }, { sparse: true });
+
 
 userSchema.pre('save', async function () {
   if (!this.isModified('password')) return;
