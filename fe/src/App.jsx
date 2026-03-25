@@ -35,6 +35,8 @@ import Leaderboard from './pages/Leaderboard';
 import GlobalAnnouncementBanner from './components/GlobalAnnouncementBanner';
 import GroupDetails from './pages/GroupDetails';
 import StudyMap from './pages/StudyMap';
+import PendingApproval from './pages/PendingApproval';
+import OrgAdminDashboard from './pages/OrgAdminDashboard';
 
 import AIAssistantWidget from './components/AIAssistantWidget';
 import CustomCursor from './components/CustomCursor';
@@ -124,6 +126,8 @@ export default function App() {
               <Route path="/profile" element={<ProtectedRoute><Layout><UserProfile /></Layout></ProtectedRoute>} />
               <Route path="/profile/edit" element={<ProtectedRoute><Layout><EditProfile /></Layout></ProtectedRoute>} />
               <Route path="/billing" element={<ProtectedRoute><Layout><Billing /></Layout></ProtectedRoute>} />
+              <Route path="/pending" element={<PendingApproval />} />
+              <Route path="/org-admin" element={<ProtectedRoute><Layout><OrgAdminDashboard /></Layout></ProtectedRoute>} />
               <Route path="/admin/user/:id/edit" element={<AdminRoute><Layout><EditProfile /></Layout></AdminRoute>} />
               <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
             </Routes>

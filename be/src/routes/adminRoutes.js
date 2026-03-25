@@ -10,8 +10,13 @@ const {
   getReports, updateReport, scanContent, updateFlaggedItem,
   getGamificationLeaderboard, awardBadge
 } = require('../controllers/adminController');
-const { protect, admin } = require('../middleware/auth');
+const { protect, admin, isOrgAdmin } = require('../middleware/auth');
 const authorizeRole = require('../middleware/rbac');
+
+// ── ORG ADMIN HYBRID AUTH ROUTES ── //
+router.get('/pending-users', protect, isOrgAdmin, require('../controllers/adminController').getPendingUsers);
+router.put('/users/:id/approve', protect, isOrgAdmin, require('../controllers/adminController').approveUser);
+router.put('/users/:id/reject', protect, isOrgAdmin, require('../controllers/adminController').rejectUser);
 
 router.get('/users', protect, admin, authorizeRole('Moderator'), getUsers);
 router.post('/users', protect, admin, authorizeRole('Super Admin'), createUser);

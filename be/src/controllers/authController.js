@@ -9,14 +9,43 @@ const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const generateToken = (id, role) => jwt.sign({ id, role }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
+const Organization = require('../models/Organization');
+
 const register = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
-    if (!name || !email || !password)
-      return res.status(400).json({ message: 'Please provide all fields' });
+    const { name, email, password, organizationId } = req.body;
+    if (!name || !email || !password || !organizationId)
+      return res.status(400).json({ message: 'Please provide name, email, password, and organization selection' });
+      
     const exists = await User.findOne({ email });
     if (exists) return res.status(400).json({ message: 'Email already registered' });
-    const user = await User.create({ name, email, password });
+    
+    const org = await Organization.findById(organizationId);
+    if (!org) return res.status(404).json({ message: 'Organization not found' });
+
+    let role = 'USER';
+    let verificationStatus = 'PENDING';
+    
+    // Check Admin Claim
+    if (org.authorizedAdmins && org.authorizedAdmins.map(e => e.toLowerCase()).includes(email.toLowerCase())) {
+      role = 'ORG_ADMIN';
+      verificationStatus = 'APPROVED';
+    } else {
+      // Domain Check (Auto-Approval)
+      const domainParts = email.split('@');
+      if (domainParts.length === 2 && domainParts[1].toLowerCase() === org.domain.toLowerCase()) {
+        verificationStatus = 'APPROVED';
+      }
+    }
+
+    const user = await User.create({ 
+      name, 
+      email, 
+      password,
+      organization: org._id,
+      role,
+      verificationStatus
+    });
     
     try {
       const settings = await Settings.findOne();
@@ -30,7 +59,16 @@ const register = async (req, res) => {
       });
     } catch (err) { console.error('Welcome email failed', err); }
     
-    res.status(201).json({ token: generateToken(user._id, 'user'), user });
+    res.status(201).json({ token: generateToken(user._id, role.toLowerCase()), user });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const getOrganizations = async (req, res) => {
+  try {
+    const orgs = await Organization.find({}).select('name domain');
+    res.json(orgs);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -232,4 +270,4 @@ const googleAuth = async (req, res) => {
   }
 };
 
-module.exports = { register, login, getMe, forgotPassword, resetPassword, changePassword, googleAuth };
+module.exports = { register, login, getMe, forgotPassword, resetPassword, changePassword, googleAuth, getOrganizations };

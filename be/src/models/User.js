@@ -62,7 +62,10 @@ const userSchema = new mongoose.Schema({
   subscription: {
     plan: { type: String, enum: ['basic', 'pro', 'squad'], default: 'basic' },
     activeUntil: { type: Date }
-  }
+  },
+  role: { type: String, enum: ['USER', 'ORG_ADMIN', 'SUPER_ADMIN'], default: 'USER' },
+  organization: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization', required: true },
+  verificationStatus: { type: String, enum: ['APPROVED', 'PENDING', 'REJECTED'], default: 'PENDING' }
 }, { timestamps: true });
 
 // 2dsphere index for geospatial $near queries

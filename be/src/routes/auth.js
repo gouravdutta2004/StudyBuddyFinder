@@ -3,6 +3,7 @@ const { register, login, getMe, forgotPassword, resetPassword, changePassword, g
 const { protect } = require('../middleware/auth');
 
 router.post('/register', register);
+router.get('/organizations', require('../controllers/authController').getOrganizations);
 router.post('/login', login);
 router.post('/google', googleAuth);
 router.get('/me', protect, getMe);

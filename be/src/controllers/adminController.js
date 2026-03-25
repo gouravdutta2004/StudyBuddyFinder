@@ -454,6 +454,49 @@ const awardBadge = async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
+// ── ORG ADMIN CONTROLLERS ── //
+const getPendingUsers = async (req, res) => {
+  try {
+    const users = await User.find({ 
+      organization: req.user.organization, 
+      verificationStatus: 'PENDING' 
+    }).select('-password').lean();
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const approveUser = async (req, res) => {
+  try {
+    const user = await User.findOneAndUpdate(
+      { _id: req.params.id, organization: req.user.organization, verificationStatus: 'PENDING' },
+      { verificationStatus: 'APPROVED' },
+      { new: true }
+    ).select('-password');
+    
+    if (!user) return res.status(404).json({ message: 'Pending user not found in your organization' });
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const rejectUser = async (req, res) => {
+  try {
+    const user = await User.findOneAndUpdate(
+      { _id: req.params.id, organization: req.user.organization, verificationStatus: 'PENDING' },
+      { verificationStatus: 'REJECTED' },
+      { new: true }
+    ).select('-password');
+    
+    if (!user) return res.status(404).json({ message: 'Pending user not found in your organization' });
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 module.exports = { 
   getUsers, updateUser, deleteUser, createUser, 
   getSystemConnections, severSystemConnection, 
@@ -462,5 +505,6 @@ module.exports = {
   getDashboardStats, getUserGrowth, getSessionStats, getSystemHealth,
   getSystemConfigs, saveSystemConfig, getAuditLogs, bulkActionUsers,
   getReports, updateReport, scanContent, updateFlaggedItem,
-  getGamificationLeaderboard, awardBadge
+  getGamificationLeaderboard, awardBadge,
+  getPendingUsers, approveUser, rejectUser
 };

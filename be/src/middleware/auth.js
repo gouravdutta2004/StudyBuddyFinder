@@ -31,4 +31,12 @@ const admin = (req, res, next) => {
   }
 };
 
-module.exports = { protect, admin };
+const isOrgAdmin = (req, res, next) => {
+  if (req.user && req.user.role === 'ORG_ADMIN') {
+    next();
+  } else {
+    res.status(403).json({ message: 'Not authorized as an Organization Admin' });
+  }
+};
+
+module.exports = { protect, admin, isOrgAdmin };

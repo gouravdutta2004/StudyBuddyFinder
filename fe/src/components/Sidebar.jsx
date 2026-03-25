@@ -75,6 +75,25 @@ export default function Sidebar({ mobileOpen = false, setMobileOpen = () => {} }
             </ButtonBase>
           );
         })}
+        {user?.role === 'ORG_ADMIN' && (
+          <ButtonBase
+            component={RouterLink}
+            to="/org-admin"
+            onClick={() => setMobileOpen(false)}
+            sx={{
+              justifyContent: 'flex-start', width: '100%', mb: 0.5, p: 1.5, borderRadius: '12px',
+              color: location.pathname.startsWith('/org-admin') ? '#6366f1' : (isDark ? 'rgba(255,255,255,0.6)' : 'text.secondary'),
+              bgcolor: location.pathname.startsWith('/org-admin') ? (isDark ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.05)') : 'transparent',
+              '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)', color: isDark ? 'white' : 'text.primary' },
+              transition: 'all 0.2s ease', display: 'flex', alignItems: 'center', gap: 2
+            }}
+          >
+            <Users size={20} strokeWidth={location.pathname.startsWith('/org-admin') ? 2.5 : 2} />
+            <Box sx={{ fontWeight: location.pathname.startsWith('/org-admin') ? 700 : 500, fontSize: '0.95rem' }}>
+              Org Admin
+            </Box>
+          </ButtonBase>
+        )}
       </Box>
 
       {/* Upgrade Call to Action */}
