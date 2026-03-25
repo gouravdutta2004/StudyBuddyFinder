@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Button, TextField, Typography, Container, InputAdornment, IconButton, CircularProgress } from '@mui/material';
 import { Email, Lock, Visibility, VisibilityOff, Security } from '@mui/icons-material';
 import { motion } from 'framer-motion';
-import api from './api'; // Assume standard axios instance
+import api from '../api/axios';
 import toast from 'react-hot-toast';
 import { useAuth } from './context/AuthContext';
 
