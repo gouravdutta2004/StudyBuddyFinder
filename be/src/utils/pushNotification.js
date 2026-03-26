@@ -1,11 +1,15 @@
 const webpush = require('web-push');
 const PushSubscription = require('../models/PushSubscription');
 
-webpush.setVapidDetails(
-  process.env.VAPID_EMAIL,
-  process.env.VAPID_PUBLIC_KEY,
-  process.env.VAPID_PRIVATE_KEY
-);
+try {
+  webpush.setVapidDetails(
+    process.env.VAPID_EMAIL || 'mailto:admin@studyfriend.co.in',
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+  );
+} catch (e) {
+  console.warn('VAPID Push configuration skipped: Missing or invalid keys');
+}
 
 /**
  * Send a browser push notification to a user by their userId.

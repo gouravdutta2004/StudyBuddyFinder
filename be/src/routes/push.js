@@ -5,11 +5,16 @@ const PushSubscription = require('../models/PushSubscription');
 const { protect } = require('../middleware/auth');
 
 // Configure VAPID – must be done before using webpush to send
-webpush.setVapidDetails(
-  process.env.VAPID_EMAIL,
-  process.env.VAPID_PUBLIC_KEY,
-  process.env.VAPID_PRIVATE_KEY
-);
+try {
+  webpush.setVapidDetails(
+    process.env.VAPID_EMAIL || 'mailto:admin@studyfriend.co.in',
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+  );
+} catch (e) {
+  console.warn('VAPID Push configuration skipped: Missing or invalid keys');
+}
+
 
 // @route  GET /api/push/vapid-public-key
 // @desc   Get the VAPID public key so the browser can create a subscription
