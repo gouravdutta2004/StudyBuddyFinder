@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 require('dotenv').config({ path: '/Users/gourav/Documents/StudyBuddyFinder/be/.env' });
 const User = require('./src/models/User');
 
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/studybuddyfinder')
+mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/studyfriend')
   .then(async () => {
     let user = await User.findOne({ email: 'admin@test.com' });
     console.log('User found:', user ? user.email : 'No user');

@@ -63,7 +63,7 @@ router.post('/test', protect, async (req, res) => {
     const { sendPushToUser } = require('../utils/pushNotification');
     await sendPushToUser(req.user.id, {
       title: '🔔 Push Notifications Active!',
-      body: 'Your StudyBuddyFinder notifications are working perfectly.',
+      body: 'Your StudyFriend notifications are working perfectly.',
       icon: '/icons.svg',
       url: '/dashboard'
     });

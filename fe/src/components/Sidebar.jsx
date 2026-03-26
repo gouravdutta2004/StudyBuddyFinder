@@ -3,6 +3,7 @@ import { Box, useTheme, ButtonBase } from '@mui/material';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { BookOpen, Search, Users, Trophy, Calendar, Globe, MessageCircle, CreditCard, MapPin, Shield, Gamepad2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import Logo from './Logo';
 
 const navLinks = [
   { to: '/dashboard', icon: BookOpen, label: 'Dashboard' },
@@ -28,13 +29,8 @@ export default function Sidebar({ mobileOpen = false, setMobileOpen = () => {} }
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: isDark ? '#020617' : '#ffffff', borderRight: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'divider' }}>
       
       {/* Brand Logo */}
-      <Box sx={{ p: 3, display: 'flex', alignItems: 'center', gap: 1.5, pb: 4 }}>
-        <Box sx={{ width: 36, height: 36, borderRadius: '10px', bgcolor: '#6366f1', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(99, 102, 241, 0.4)' }}>
-          <BookOpen size={20} color="white" />
-        </Box>
-        <Box sx={{ fontWeight: 900, fontSize: '1.25rem', letterSpacing: '-0.5px', color: isDark ? 'white' : 'text.primary' }}>
-          StudyBuddy
-        </Box>
+      <Box sx={{ p: 3, pb: 4 }}>
+        <Logo size={36} textColor={isDark ? 'white' : 'text.primary'} />
       </Box>
 
         {/* Navigation Links */}

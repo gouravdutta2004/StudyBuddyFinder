@@ -13,8 +13,8 @@ app.use(cors({
     'http://localhost:5174',
     'http://127.0.0.1:5174',
     'http://localhost:3000',
-    'https://studybuddyfinder.pages.dev',
-    /\.studybuddyfinder\.pages\.dev$/
+    'https://studyfriend.pages.dev',
+    /\.studyfriend\.pages\.dev$/
   ], 
   credentials: true 
 }));
@@ -40,7 +40,7 @@ app.use('/api/billing', require('./src/routes/billing.routes'));
 app.use('/api/push', require('./src/routes/push'));
 app.use('/api/campus', require('./src/routes/campus'));
 
-app.get('/api/health', (req, res) => res.json({ status: 'OK', message: 'StudyBuddyFinder API running' }));
+app.get('/api/health', (req, res) => res.json({ status: 'OK', message: 'StudyFriend API running' }));
 
 // ----- GLOBAL PRESENCE MAP -----
 const onlineUsers = new Map();

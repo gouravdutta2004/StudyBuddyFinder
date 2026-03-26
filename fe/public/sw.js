@@ -1,4 +1,4 @@
-// StudyBuddyFinder Service Worker - Browser Push Notifications
+// StudyFriend Service Worker - Browser Push Notifications
 // This file MUST be in the /public folder to be served at the root URL
 
 self.addEventListener('push', function (event) {
@@ -8,15 +8,15 @@ self.addEventListener('push', function (event) {
   try {
     data = event.data.json();
   } catch (e) {
-    data = { title: 'StudyBuddyFinder', body: event.data.text() };
+    data = { title: 'StudyFriend', body: event.data.text() };
   }
 
-  const title = data.title || 'StudyBuddyFinder';
+  const title = data.title || 'StudyFriend';
   const options = {
     body: data.body || 'You have a new notification.',
     icon: data.icon || '/icons.svg',
     badge: '/icons.svg',
-    tag: data.tag || 'studybuddyfinder-notification',
+    tag: data.tag || 'studyfriend-notification',
     renotify: true,
     vibrate: [200, 100, 200],
     data: {

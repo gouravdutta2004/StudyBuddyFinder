@@ -107,7 +107,7 @@ export default function ShareSquadStory({ connections }) {
           </Box>
 
           <Box sx={{ position: 'absolute', bottom: 30, display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 10 }}>
-            <Typography variant="caption" sx={{ fontWeight: 700, opacity: 0.7 }}>studybuddyfinder.com/join</Typography>
+            <Typography variant="caption" sx={{ fontWeight: 700, opacity: 0.7 }}>studyfriend.com/join</Typography>
           </Box>
         </Box>
       </Box>

@@ -194,7 +194,7 @@ export default function UserProfile() {
                      doc.text(`Badges: ${profile.badges?.join(', ') || 'None'}`, 20, 105);
                      
                      doc.setFont('helvetica', 'italic');
-                     doc.text(`"Verified on Study Buddy Finder Framework"`, 20, 280);
+                     doc.text(`"Verified on StudyFriend Framework"`, 20, 280);
                      
                      doc.save(`${profile.name.replace(/\s+/g, '_')}_Academic_Resume.pdf`);
                      toast.success('Resume Decrypted & Exported successfully!', { id: toastId });

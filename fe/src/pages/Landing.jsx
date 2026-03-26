@@ -9,6 +9,7 @@ import Lenis from 'lenis';
 import ReactiveHero from '../components/landing/ReactiveHero';
 import PlayableSandbox from '../components/landing/PlayableSandbox';
 import VelocityMarquee from '../components/landing/VelocityMarquee';
+import Logo from '../components/Logo';
 
 // --- Shared Framer Motion Variants ---
 const staggerContainer = {
@@ -83,9 +84,7 @@ function LandingNavbar() {
         borderRadius: '100px', px: 3, py: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         boxShadow: '0 10px 40px -10px rgba(0,0,0,0.5)'
       }}>
-        <Typography variant="h6" fontWeight={800} sx={{ color: 'white', display: 'flex', alignItems: 'center', gap: 1, letterSpacing: '-0.5px' }}>
-          <Globe size={20} color="#6366f1" /> StudyBuddyFinder
-        </Typography>
+        <Logo size={28} textColor="white" />
         <Box sx={{ display: 'flex', gap: 1.5 }}>
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button variant="text" onClick={() => navigate('/login')} sx={{ color: 'rgba(255,255,255,0.8)', fontWeight: 600, textTransform: 'none', borderRadius: 8, px: 3 }}>
@@ -251,11 +250,11 @@ function Pricing() {
 function Footer() {
   return (
     <Box sx={{ borderTop: '1px solid rgba(255,255,255,0.05)', pt: 8, pb: 4, mt: 10, textAlign: 'center', bgcolor: 'rgba(0,0,0,0.2)', position: 'relative', zIndex: 10 }}>
-      <Typography variant="h6" fontWeight={800} color="white" mb={2} display="flex" alignItems="center" justifyContent="center" gap={1}>
-        <Globe size={20} color="#6366f1" /> StudyBuddyFinder
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+        <Logo size={24} textColor="white" />
+      </Box>
       <Typography variant="body2" color="rgba(255,255,255,0.3)" fontWeight={500}>
-        © 2026 StudyBuddyFinder Inc. Crafted for excellence.
+        © 2026 StudyFriend Inc. Crafted for excellence.
       </Typography>
     </Box>
   );

@@ -3,7 +3,7 @@ import { Box, Typography } from '@mui/material';
 
 export default function SquadStudyRoom({ groupId, name }) {
   // We use Jitsi Meet API via public iframe, scoped safely to the squad ID.
-  const roomName = `StudyBuddyFinder_Squad_${groupId}`;
+  const roomName = `StudyFriend_Squad_${groupId}`;
   
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>

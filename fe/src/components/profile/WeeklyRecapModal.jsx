@@ -14,7 +14,7 @@ export default function WeeklyRecapModal({ open, onClose }) {
       id: 0,
       icon: <Trophy size={64} color="#f59e0b" />,
       title: "Your Weekly Recap",
-      subtitle: "Let's review the incredible progress you've made this week in the Study Buddy Finder Matrix.",
+      subtitle: "Let's review the incredible progress you've made this week in the StudyFriend Matrix.",
       color: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
     },
     {

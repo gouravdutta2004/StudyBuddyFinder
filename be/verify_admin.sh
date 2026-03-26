@@ -1,6 +1,6 @@
 #!/bin/bash
 # Elevate user to Admin
-mongosh studybuddyfinder --eval 'db.users.updateOne({email: "fix2@test.com"}, {$set: {isAdmin: true}})'
+mongosh studyfriend --eval 'db.users.updateOne({email: "fix2@test.com"}, {$set: {isAdmin: true}})'
 
 # Login to get JWT
 RESPONSE=$(curl -s -X POST http://localhost:5001/api/auth/login -H "Content-Type: application/json" -d '{"email": "fix2@test.com", "password": "password123"}')

@@ -144,7 +144,7 @@ router.get('/quests', protect, async (req, res) => {
     if (quests.length === 0) {
       const generated = [
         { userId: req.user.id, task: 'Complete a 60-minute Focus Session', isCompleted: false },
-        { userId: req.user.id, task: 'Endorse a Study Buddy', isCompleted: false },
+        { userId: req.user.id, task: 'Endorse a StudyFriend', isCompleted: false },
         { userId: req.user.id, task: 'Log 2 total study hours today', isCompleted: false }
       ];
       quests = await DailyQuest.insertMany(generated);

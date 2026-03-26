@@ -25,7 +25,7 @@ const users = names.map((name, i) => ({
 
 async function insertData() {
   try {
-    await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/studybuddyfinder');
+    await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/studyfriend');
     console.log('Connected to DB');
     
     // Insert array

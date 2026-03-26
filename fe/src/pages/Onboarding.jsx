@@ -93,7 +93,7 @@ export default function Onboarding() {
             <Sparkles size={32} color="#818cf8" />
           </Box>
           <Typography variant="h3" fontWeight="900" color="white" mb={1} sx={{ letterSpacing: '-1px' }}>
-            Welcome to StudyBuddy
+            Welcome to StudyFriend
           </Typography>
           <Typography variant="h6" color="rgba(255,255,255,0.5)">
             Let's tune your experience.

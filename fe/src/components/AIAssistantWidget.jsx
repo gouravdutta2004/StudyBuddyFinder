@@ -9,7 +9,7 @@ import { useTheme } from '../context/ThemeContext';
 export default function AIAssistantWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { role: 'model', content: "Hi! I'm your AI Study Buddy. How can I help you today?" }
+    { role: 'model', content: "Hi! I'm your AI StudyFriend. How can I help you today?" }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -99,7 +99,7 @@ export default function AIAssistantWidget() {
                   <Sparkles size={20} />
                 </Avatar>
                 <Box>
-                  <Typography variant="subtitle1" fontWeight={700} lineHeight={1}>AI Study Buddy</Typography>
+                  <Typography variant="subtitle1" fontWeight={700} lineHeight={1}>AI StudyFriend</Typography>
                   <Typography variant="caption" sx={{ opacity: 0.9 }}>Powered by Gemini</Typography>
                 </Box>
               </Box>
@@ -167,7 +167,7 @@ export default function AIAssistantWidget() {
                 fullWidth
                 multiline
                 maxRows={3}
-                placeholder="Ask your study buddy..."
+                placeholder="Ask your studyfriend..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyPress}

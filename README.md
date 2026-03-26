@@ -1,4 +1,4 @@
-# Study Buddy Finder 🚀
+# StudyFriend 🚀
 
 > The ultimate collaborative learning platform designed to connect students, form high-performance study squads, and supercharge academic productivity.
 
@@ -8,7 +8,7 @@
 ![MongoDB](https://img.shields.io/badge/MongoDB-Latest-darkgreen?logo=mongodb&style=flat-square)
 ![Socket.io](https://img.shields.io/badge/Socket.io-Socket-black?logo=socketdotio&style=flat-square)
 
-Study Buddy Finder is a modern, full-stack SaaS application built on the MERN stack. It features a stunning, glassmorphic UI powered by **Framer Motion**, and a robust backend that handles real-time WebSockets, dynamic activity heatmaps, and secure Google OAuth integration.
+StudyFriend is a modern, full-stack SaaS application built on the MERN stack. It features a stunning, glassmorphic UI powered by **Framer Motion**, and a robust backend that handles real-time WebSockets, dynamic activity heatmaps, and secure Google OAuth integration.
 
 ---
 
@@ -59,8 +59,8 @@ Study Buddy Finder is a modern, full-stack SaaS application built on the MERN st
 
 ### 1. Clone the Repository
 \`\`\`bash
-git clone https://github.com/gouravdutta2004/StudyBuddyFinder.git
-cd StudyBuddyFinder
+git clone https://github.com/gouravdutta2004/StudyFriend.git
+cd StudyFriend
 \`\`\`
 
 ### 2. Environment Variables
@@ -119,7 +119,7 @@ Navigate to `http://localhost:5173` in your browser to see the application!
 ## 🗂 Project Structure
 
 \`\`\`text
-StudyBuddyFinder/
+StudyFriend/
 ├── be/                       # Node.js / Express Backend
 │   ├── src/
 │   │   ├── controllers/      # Route logic (Auth, Users, Groups, Admin)

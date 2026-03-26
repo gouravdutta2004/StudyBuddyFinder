@@ -47,7 +47,7 @@ export default function SessionCard({ session, currentUserId, onJoin, onLeave, o
     const formatDate = (date) => date.toISOString().replace(/-|:|\.\d\d\d/g, '');
     const url = new URL('https://calendar.google.com/calendar/render');
     url.searchParams.append('action', 'TEMPLATE');
-    url.searchParams.append('text', session.title || 'Study Buddy Session');
+    url.searchParams.append('text', session.title || 'StudyFriend Session');
     url.searchParams.append('dates', `${formatDate(start)}/${formatDate(end)}`);
     url.searchParams.append('details', session.description || 'Study session with connections');
     url.searchParams.append('location', session.isOnline ? (session.meetingLink || 'Online') : session.location);

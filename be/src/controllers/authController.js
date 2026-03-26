@@ -69,7 +69,7 @@ const register = async (req, res) => {
       const welcomeHtml = template.replace(/{name}/g, user.name);
       await sendEmail({
         email: user.email,
-        subject: 'Welcome to StudyBuddyFinder!',
+        subject: 'Welcome to StudyFriend!',
         message: `Welcome ${user.name}!`,
         html: welcomeHtml
       });
@@ -305,7 +305,7 @@ const googleAuth = async (req, res) => {
         const welcomeHtml = template.replace(/{name}/g, user.name);
         await sendEmail({
           email: user.email,
-          subject: 'Welcome to StudyBuddyFinder!',
+          subject: 'Welcome to StudyFriend!',
           message: `Welcome ${user.name}!`,
           html: welcomeHtml
         });

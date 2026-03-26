@@ -150,7 +150,7 @@ export default function OrgAdminDashboard() {
               <School color="#818cf8" size={24} />
             </Box>
             <Typography variant="h6" fontWeight={900} color={isDark ? "white" : "#0f172a"}>
-               StudyBuddy Finder <Typography component="span" fontWeight={400} sx={{ opacity: 0.6 }}>| Institution Command</Typography>
+               StudyFriend <Typography component="span" fontWeight={400} sx={{ opacity: 0.6 }}>| Institution Command</Typography>
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', gap: 2 }}>

@@ -249,7 +249,7 @@ const broadcastEmail = async (req, res) => {
         <div style="padding: 20px; background: #f9fafb; border-radius: 8px; margin: 20px 0; white-space: pre-wrap;">
           {message}
         </div>
-        <p style="color: #6b7280; font-size: 14px;">- The StudyBuddyFinder Administrative Team</p>
+        <p style="color: #6b7280; font-size: 14px;">- The StudyFriend Administrative Team</p>
       </div>
     `;
 

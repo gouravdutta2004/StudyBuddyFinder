@@ -19,7 +19,7 @@ router.get('/export', protect, async (req, res) => {
         start: [start.getFullYear(), start.getMonth() + 1, start.getDate(), start.getHours(), start.getMinutes()],
         duration: { hours: 1 },
         title: s.title,
-        description: s.description || 'StudyBuddyFinder Session',
+        description: s.description || 'StudyFriend Session',
         location: s.isOnline ? s.meetingLink : s.location,
         url: s.isOnline ? s.meetingLink : undefined,
         status: 'CONFIRMED'

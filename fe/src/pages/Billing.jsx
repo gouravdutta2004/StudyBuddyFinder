@@ -132,7 +132,7 @@ export default function Billing() {
         key: key_id,
         amount,
         currency,
-        name: 'StudyBuddyFinder',
+        name: 'StudyFriend',
         description: `Upgrade to ${planKey.toUpperCase()}`,
         order_id: orderId,
         handler: async (response) => {
@@ -202,7 +202,7 @@ export default function Billing() {
               <CreditCard color="#6366f1" size={40} /> Subscription &amp; Billing
             </Typography>
             <Typography variant="h6" color="rgba(255,255,255,0.5)">
-              Manage your plan and unlock premium StudyBuddy tools.
+              Manage your plan and unlock premium StudyFriend tools.
             </Typography>
 
             {/* Gateway mode indicator */}

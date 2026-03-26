@@ -190,14 +190,14 @@ const sendRequest = async (req, res) => {
       // Browser push notification
       await sendPushToUser(userId, {
         title: '📨 New Connection Request',
-        body: `${req.user.name} wants to connect with you on StudyBuddyFinder!`,
+        body: `${req.user.name} wants to connect with you on StudyFriend!`,
         icon: '/icons.svg',
         url: '/connections'
       });
       await sendEmail({
         email: target.email,
-        subject: 'New Study Buddy Request!',
-        message: `Hello ${target.name},\n\nYou have a new connection request from ${req.user.name}.\nLog into StudyBuddyFinder to accept or decline the request!\n\nBest,\nThe StudyBuddyFinder Team`
+        subject: 'New StudyFriend Request!',
+        message: `Hello ${target.name},\n\nYou have a new connection request from ${req.user.name}.\nLog into StudyFriend to accept or decline the request!\n\nBest,\nThe StudyFriend Team`
       });
     } catch (err) {
       console.error('Email/Notification failed to send but request was dispatched:', err);
@@ -240,7 +240,7 @@ const acceptRequest = async (req, res) => {
         await sendEmail({
           email: targetUser.email,
           subject: 'Connection Request Accepted!',
-          message: `Hello ${targetUser.name},\n\nGreat news! ${req.user.name} has accepted your connection request.\nYou can now message each other on StudyBuddyFinder!\n\nBest,\nThe StudyBuddyFinder Team`
+          message: `Hello ${targetUser.name},\n\nGreat news! ${req.user.name} has accepted your connection request.\nYou can now message each other on StudyFriend!\n\nBest,\nThe StudyFriend Team`
         });
       } catch (err) {
         console.error('Email/Notification failed to send but connection was formed:', err);

@@ -3,7 +3,7 @@ const createRoom = async (req, res) => {
     const API_KEY = process.env.DAILY_API_KEY;
     if (!API_KEY) {
       console.warn("DAILY_API_KEY not set in .env. Using fallback test room.");
-      return res.json({ url: 'https://studybuddy-demo.daily.co/test-room' });
+      return res.json({ url: 'https://studyfriend-demo.daily.co/test-room' });
     }
     
     // Create a Daily.co room
