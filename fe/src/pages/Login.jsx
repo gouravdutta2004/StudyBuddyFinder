@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Globe } from 'lucide-react';
+// Removed Globe icon
 import toast from 'react-hot-toast';
 import { Box, Button, Container, TextField, Typography, Link, InputAdornment, IconButton } from '@mui/material';
 import { Visibility, VisibilityOff, Email, Lock, Security } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { GoogleLogin } from '@react-oauth/google';
+import Logo from '../components/Logo';
 
 const staggerContainer = {
   hidden: { opacity: 0 },
@@ -80,8 +81,8 @@ export default function Login() {
             
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 5 }}>
               <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.2 }}>
-                <Box sx={{ width: 56, height: 56, borderRadius: '20px', bgcolor: 'rgba(99, 102, 241, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 3 }}>
-                  <Globe size={32} color="#818cf8" />
+                <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+                  <Logo size={64} showText={false} />
                 </Box>
               </motion.div>
               <Typography component="h1" variant="h4" sx={{ fontWeight: 900, color: 'white', letterSpacing: '-1px', mb: 1 }}>

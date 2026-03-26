@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Globe, Building, ArrowRight, PersonStanding, Search } from 'lucide-react';
+import { Building, ArrowRight, PersonStanding, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Box, Button, Container, TextField, Typography, Link, InputAdornment, IconButton, CircularProgress, Autocomplete } from '@mui/material';
 import { Visibility, VisibilityOff, Email, Lock, Person } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GoogleLogin } from '@react-oauth/google';
+import Logo from '../components/Logo';
 
 const staggerContainer = {
   hidden: { opacity: 0 },
@@ -157,8 +158,8 @@ export default function Register() {
             
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 4 }}>
               <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.2 }}>
-                <Box sx={{ width: 56, height: 56, borderRadius: '20px', bgcolor: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 3 }}>
-                  <Globe size={32} color="#34d399" />
+                <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+                  <Logo size={64} showText={false} />
                 </Box>
               </motion.div>
               <Typography component="h1" variant="h4" sx={{ fontWeight: 900, color: 'white', letterSpacing: '-1px', mb: 1, textAlign: 'center' }}>
