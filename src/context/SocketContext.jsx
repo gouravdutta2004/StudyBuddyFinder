@@ -22,7 +22,7 @@ export const SocketProvider = ({ children }) => {
             return;
         }
 
-        const newSocket = io(import.meta.env.VITE_API_URL || 'http://localhost:5001', {
+        const newSocket = io(import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5001', {
             withCredentials: true
         });
         setSocket(newSocket);

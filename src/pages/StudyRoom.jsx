@@ -72,7 +72,8 @@ export default function StudyRoom() {
 
   useEffect(() => {
     if (!session) return;
-    const newSocket = io('http://localhost:5001', { withCredentials: true });
+    const wsUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5001';
+    const newSocket = io(wsUrl, { withCredentials: true });
     newSocket.emit('join_study_room', id);
     setSocket(newSocket);
     return () => newSocket.disconnect();

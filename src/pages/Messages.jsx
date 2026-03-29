@@ -224,7 +224,8 @@ export default function Messages() {
       const { data } = await api.post('/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      const absUrl = `http://localhost:5001${data.url}`;
+      const wsUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5001';
+      const absUrl = `${wsUrl}${data.url}`;
       const markdownInjection = file.type.startsWith('image/') ? `![attachment](${absUrl})` : `[Download Attachment](${absUrl})`;
       setNewMsg(prev => prev ? `${prev}\n${markdownInjection}` : markdownInjection);
       toast.success('Attached successfully', { id: toastId });
