@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
-import { Box, Typography, Button, TextField, Paper, Select, MenuItem, Grid, IconButton } from '@mui/material';
-import { Upload, FileText, Link as LinkIcon, Download, Loader2 } from 'lucide-react';
-import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { Box, Typography, Button, TextField, Paper, Select, MenuItem, Grid, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Fab, Tooltip, CircularProgress } from '@mui/material';
+import { Upload, FileText, Link as LinkIcon, Download, Loader2, Folder, Sparkles, X, Send, Bot } from 'lucide-react';
+import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from 'framer-motion';
+import ReactMarkdown from 'react-markdown';
 import api from "../../api/axios";
 import toast from 'react-hot-toast';
 
@@ -15,6 +16,39 @@ export default function SquadVault({ groupId, initialResources = [] }) {
   const [form, setForm] = useState({ title: '', url: '', type: 'link' });
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
+
+  // AI Tutor State
+  const [isTutorOpen, setIsTutorOpen] = useState(false);
+  const [prompt, setPrompt] = useState('');
+  const [chatHistory, setChatHistory] = useState([
+    { role: 'model', content: "Hi! I'm your squad's AI Tutor. Ask me any questions about the subjects you're currently studying!" }
+  ]);
+  const [isTyping, setIsTyping] = useState(false);
+  const chatBottomRef = useRef(null);
+
+  const handleAskTutor = async () => {
+    if (!prompt.trim()) return;
+    const userMsg = prompt.trim();
+    setPrompt('');
+    setChatHistory(prev => [...prev, { role: 'user', content: userMsg }]);
+    setIsTyping(true);
+    
+    setTimeout(() => chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+
+    try {
+      const res = await api.post('/ai/squad-tutor', {
+        prompt: userMsg,
+        squadName: "Your Squad",
+        subject: "your shared resources"
+      });
+      setChatHistory(prev => [...prev, { role: 'model', content: res.data.text }]);
+    } catch (err) {
+      toast.error('AI Tutor failed to connect!');
+    } finally {
+      setIsTyping(false);
+      setTimeout(() => chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+    }
+  };
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
@@ -131,6 +165,117 @@ export default function SquadVault({ groupId, initialResources = [] }) {
           )}
         </Grid>
       </motion.div>
+
+      {/* Floating Action Button */}
+      <Tooltip title="Ask AI Tutor" placement="left">
+        <Fab 
+          color="primary" 
+          aria-label="ai tutor"
+          onClick={() => setIsTutorOpen(true)}
+          sx={{ 
+            position: 'fixed', 
+            bottom: 32, 
+            right: 32, 
+            bgcolor: '#6366f1', 
+            '&:hover': { bgcolor: '#4f46e5' },
+            boxShadow: '0 8px 32px rgba(99, 102, 241, 0.4)'
+          }}
+        >
+          <Sparkles />
+        </Fab>
+      </Tooltip>
+
+      {/* AI Tutor Dialog */}
+      <Dialog 
+        open={isTutorOpen} 
+        onClose={() => setIsTutorOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: '#0f172a',
+            backgroundImage: 'none',
+            borderRadius: '24px',
+            border: '1px solid rgba(255,255,255,0.1)',
+            overflow: 'hidden'
+          }
+        }}
+      >
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 3, borderBottom: '1px solid rgba(255,255,255,0.05)', bgcolor: 'rgba(255,255,255,0.02)' }}>
+          <Box sx={{ width: 40, height: 40, borderRadius: '12px', bgcolor: 'rgba(99, 102, 241, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Bot size={24} color="#818cf8" />
+          </Box>
+          <Box flex={1}>
+            <Typography variant="h6" fontWeight="800" color="white" lineHeight={1.2}>Squad AI Tutor</Typography>
+            <Typography variant="caption" color="text.secondary">Powered by Gemini Pro</Typography>
+          </Box>
+          <IconButton onClick={() => setIsTutorOpen(false)} sx={{ color: 'rgba(255,255,255,0.5)' }}>
+            <X />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ p: 0, height: '400px', display: 'flex', flexDirection: 'column', bgcolor: '#020617' }}>
+          <Box sx={{ flex: 1, overflowY: 'auto', p: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {chatHistory.map((msg, idx) => (
+              <Box key={idx} sx={{ alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '85%' }}>
+                <Paper sx={{ 
+                  p: 2, borderRadius: 3, 
+                  bgcolor: msg.role === 'user' ? '#6366f1' : 'rgba(255,255,255,0.05)', 
+                  color: 'white', border: msg.role === 'model' ? '1px solid rgba(255,255,255,0.1)' : 'none',
+                  borderBottomRightRadius: msg.role === 'user' ? 4 : 24,
+                  borderBottomLeftRadius: msg.role === 'model' ? 4 : 24,
+                }}>
+                  {msg.role === 'model' ? (
+                    <Box sx={{ '& p': { m: 0, mb: 1 }, '& p:last-child': { mb: 0 }, '& code': { bgcolor: 'rgba(0,0,0,0.3)', px: 1, borderRadius: 1 } }}>
+                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    </Box>
+                  ) : (
+                    <Typography variant="body2">{msg.content}</Typography>
+                  )}
+                </Paper>
+              </Box>
+            ))}
+            {isTyping && (
+              <Box sx={{ alignSelf: 'flex-start', maxWidth: '80%' }}>
+                <Paper sx={{ p: 2, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)', borderBottomLeftRadius: 4 }}>
+                  <Box display="flex" gap={1} alignItems="center">
+                     <CircularProgress size={14} thickness={6} sx={{ color: '#818cf8' }}/>
+                     <Typography variant="caption" fontWeight={700}>Tutor is reading...</Typography>
+                  </Box>
+                </Paper>
+              </Box>
+            )}
+            <div ref={chatBottomRef} />
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ p: 2, borderTop: '1px solid rgba(255,255,255,0.05)', bgcolor: 'rgba(255,255,255,0.02)' }}>
+          <TextField
+            fullWidth
+            placeholder="Ask about your study materials..."
+            variant="outlined"
+            size="small"
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleAskTutor()}
+            disabled={isTyping}
+            sx={{ 
+              input: { color: 'white' }, 
+              '& .MuiOutlinedInput-root': {
+                bgcolor: 'rgba(0,0,0,0.2)', borderRadius: 3,
+                '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
+                '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
+                '&.Mui-focused fieldset': { borderColor: '#6366f1' },
+              }
+            }}
+          />
+          <IconButton 
+            onClick={handleAskTutor} 
+            disabled={!prompt.trim() || isTyping}
+            sx={{ bgcolor: '#6366f1', color: 'white', '&:hover': { bgcolor: '#4f46e5' }, '&.Mui-disabled': { bgcolor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.3)' } }}
+          >
+            <Send size={18} />
+          </IconButton>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
