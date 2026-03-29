@@ -14,6 +14,7 @@ import FocusTimerWidget from '../components/dashboard/FocusTimerWidget';
 import StudyQuoteWidget from '../components/dashboard/StudyQuoteWidget';
 import StudyAnalyticsWidget from '../components/dashboard/StudyAnalyticsWidget';
 import ActivityHeatmap from '../components/dashboard/ActivityHeatmap';
+import MiniCalendarWidget from '../components/dashboard/MiniCalendarWidget';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { Box, Container, Typography, Grid, Button, Avatar, Chip, IconButton, useTheme } from '@mui/material';
 
@@ -268,10 +269,17 @@ export default function Dashboard() {
             </Box>
           </Box>
 
-          {/* Global Activity Feed (Tall Vertical) */}
-          <Box component={motion.div} variants={fadeUpSpring} sx={{ gridColumn: { xs: 'span 1', md: 'span 4' }, gridRow: { md: 'span 2' } }}>
-            <Box sx={{ height: '100%', bgcolor: isDark ? 'rgba(15, 23, 42, 0.4)' : 'rgba(255, 255, 255, 0.5)', backdropFilter: 'blur(16px)', border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)', borderRadius: '24px', overflow: 'hidden', boxShadow: isDark ? '0 10px 30px rgba(0, 0, 0, 0.5)' : '0 10px 30px rgba(0, 0, 0, 0.05)' }}>
+          {/* Global Activity Feed (Standardized Vertical) */}
+          <Box component={motion.div} variants={fadeUpSpring} sx={{ gridColumn: { xs: 'span 1', md: 'span 4' } }}>
+            <Box sx={{ height: '100%', minHeight: '280px', bgcolor: isDark ? 'rgba(15, 23, 42, 0.4)' : 'rgba(255, 255, 255, 0.5)', backdropFilter: 'blur(16px)', border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)', borderRadius: '24px', overflow: 'hidden', boxShadow: isDark ? '0 10px 30px rgba(0, 0, 0, 0.5)' : '0 10px 30px rgba(0, 0, 0, 0.05)' }}>
               <GlobalActivityFeed />
+            </Box>
+          </Box>
+
+          {/* Mini Calendar Realistic Widget */}
+          <Box component={motion.div} variants={fadeUpSpring} sx={{ gridColumn: { xs: 'span 1', md: 'span 4' } }}>
+            <Box sx={{ height: '100%', minHeight: '280px', bgcolor: isDark ? 'rgba(15, 23, 42, 0.4)' : 'rgba(255, 255, 255, 0.5)', backdropFilter: 'blur(16px)', border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)', borderRadius: '24px', overflow: 'hidden', boxShadow: isDark ? '0 10px 30px rgba(0, 0, 0, 0.5)' : '0 10px 30px rgba(0, 0, 0, 0.05)' }}>
+              <MiniCalendarWidget />
             </Box>
           </Box>
 
