@@ -13,17 +13,17 @@ function CircleNode({ user: u, tab, onAccept, onReject, onDisconnect, navigate, 
   const ringColor = tab === 'connections' ? '#6366f1' : tab === 'pending' ? '#10b981' : '#f59e0b';
   
   return (
-    <motion.div layout initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} whileHover={{ y: -8 }} transition={{ type: 'spring', stiffness: 300, damping: 20 }}>
+    <motion.div layout initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} whileHover={{ y: -8 }} transition={{ type: 'spring', stiffness: 300, damping: 20 }} style={{ willChange: 'transform, opacity' }}>
       <Box sx={{
         p: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 2,
-        bgcolor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.7)', backdropFilter: 'blur(40px)',
+        bgcolor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.7)', backdropFilter: 'blur(12px)',
         borderRadius: '120px 120px 40px 40px', // Teardrop/Bubble shape
-        border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
-        boxShadow: isDark ? `0 20px 40px rgba(0,0,0,0.5), inset 0 0 0 1px ${ringColor}30` : `0 20px 40px rgba(99,102,241,0.05), inset 0 0 0 1px ${ringColor}20`,
+        border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+        boxShadow: isDark ? `0 8px 32px ${ringColor}22` : `0 8px 32px ${ringColor}33`,
         position: 'relative', overflow: 'hidden', height: '100%'
       }}>
         {/* Glow behind avatar */}
-        <Box sx={{ position: 'absolute', top: 40, left: '50%', transform: 'translate(-50%, -50%)', width: 100, height: 100, bgcolor: ringColor, filter: 'blur(40px)', opacity: 0.2, borderRadius: '50%' }} />
+        <Box sx={{ position: 'absolute', top: 40, left: '50%', transform: 'translate(-50%, -50%)', width: 100, height: 100, bgcolor: ringColor, filter: 'blur(12px)', opacity: 0.15, borderRadius: '50%', pointerEvents: 'none' }} />
 
         {/* Avatar Ring */}
         <Box component={ButtonBase} onClick={() => navigate(`/user/${u._id}`)} sx={{ borderRadius: '50%', p: 0.5, border: `2px dashed ${ringColor}80`, transition: 'transform 0.5s', '&:hover': { transform: 'rotate(45deg)' } }}>

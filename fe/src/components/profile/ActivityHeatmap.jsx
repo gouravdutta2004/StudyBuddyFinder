@@ -6,7 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
-export default function ActivityHeatmap({ userId }) {
+const ActivityHeatmap = React.memo(function ActivityHeatmap({ userId }) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [activeDates, setActiveDates] = useState([]);
@@ -108,4 +108,6 @@ export default function ActivityHeatmap({ userId }) {
       </Box>
     </Card>
   );
-}
+});
+
+export default ActivityHeatmap;

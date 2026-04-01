@@ -107,7 +107,7 @@ function Marquee() {
       <motion.div
         animate={{ x: ['0%', '-50%'] }}
         transition={{ repeat: Infinity, duration: 18, ease: 'linear' }}
-        style={{ display: 'inline-flex', gap: 48 }}
+        style={{ display: 'inline-flex', gap: 48, willChange: 'transform' }}
       >
         {[...items, ...items].map((item, i) => (
           <Box key={i} sx={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
@@ -300,7 +300,7 @@ function FeaturedBanner({ onSelect }) {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 0.75 }}>
               <Chip label="★ FEATURED" size="small"
                 sx={{ bgcolor: featured.color + '20', color: featured.color, fontFamily: 'monospace', fontWeight: 900, fontSize: '0.6rem', letterSpacing: 2, borderRadius: '4px', border: `1px solid ${featured.color}44` }} />
-              <Box component={motion.div} animate={{ opacity: [1, 0.4, 1] }} transition={{ repeat: Infinity, duration: 1.5 }}>
+              <Box component={motion.div} style={{ willChange: 'opacity' }} animate={{ opacity: [1, 0.4, 1] }} transition={{ repeat: Infinity, duration: 1.5 }}>
                 <Chip label="LIVE" size="small"
                   sx={{ bgcolor: 'rgba(34,197,94,0.15)', color: '#22c55e', fontFamily: 'monospace', fontWeight: 900, fontSize: '0.6rem', letterSpacing: 2, borderRadius: '4px', border: '1px solid rgba(34,197,94,0.3)' }} />
               </Box>
@@ -429,7 +429,7 @@ export default function Arcade() {
                       component={motion.div}
                       animate={{ opacity: [1, 0.5, 1] }}
                       transition={{ repeat: Infinity, duration: 1.8 }}
-                      sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#22c55e', boxShadow: '0 0 10px rgba(34,197,94,0.8)' }}
+                      sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#22c55e', boxShadow: '0 0 10px rgba(34,197,94,0.8)', willChange: 'opacity' }}
                     />
                     <Typography fontFamily="monospace" fontSize="0.68rem" fontWeight={800}
                       color="#22c55e" letterSpacing={3}>ARCADE ONLINE</Typography>

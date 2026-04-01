@@ -284,7 +284,7 @@ export default function Gamification() {
   if (loading || !profile) {
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minHeight: '80vh', gap: 2 }}>
-        <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1.2, ease: 'linear' }}>
+        <motion.div style={{ willChange: 'transform' }} animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1.2, ease: 'linear' }}>
           <Cpu size={48} color="#6366f1" />
         </motion.div>
         <Typography fontWeight={800} color="text.secondary" sx={{ letterSpacing: 4, textTransform: 'uppercase', fontSize: '0.8rem' }}>
@@ -328,7 +328,7 @@ export default function Gamification() {
                 component={motion.div}
                 animate={{ opacity: [1, 0.6, 1] }}
                 transition={{ repeat: Infinity, duration: 2 }}
-                sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#22c55e', boxShadow: '0 0 8px rgba(34,197,94,0.7)' }}
+                sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#22c55e', boxShadow: '0 0 8px rgba(34,197,94,0.7)', willChange: 'opacity' }}
               />
               <Typography variant="caption" fontWeight={800} color="#22c55e" sx={{ letterSpacing: 3, textTransform: 'uppercase', fontSize: '0.7rem' }}>
                 System Online
@@ -397,6 +397,7 @@ export default function Gamification() {
                       sx={{
                         position: 'absolute', inset: -6, borderRadius: '50%',
                         border: '2px dashed', borderColor: tier.color + '44',
+                        willChange: 'transform'
                       }}
                     />
                     <Avatar

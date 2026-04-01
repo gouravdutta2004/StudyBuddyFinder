@@ -95,7 +95,7 @@ function StatusDot({ color = '#22c55e', pulse = false }) {
       component={pulse ? motion.div : 'div'}
       animate={pulse ? { opacity: [1, 0.3, 1] } : undefined}
       transition={pulse ? { repeat: Infinity, duration: 2 } : undefined}
-      sx={{ width: 7, height: 7, borderRadius: '50%', bgcolor: color, boxShadow: `0 0 6px ${color}`, flexShrink: 0 }}
+      sx={{ width: 7, height: 7, borderRadius: '50%', bgcolor: color, boxShadow: `0 0 6px ${color}`, flexShrink: 0, willChange: pulse ? 'opacity' : 'auto' }}
     />
   );
 }

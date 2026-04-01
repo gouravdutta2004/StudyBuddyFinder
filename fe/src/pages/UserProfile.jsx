@@ -93,6 +93,7 @@ function BadgeCard({ name, earned }) {
           filter: earned ? 'none' : 'grayscale(1)',
           cursor: 'default', overflow: 'hidden',
         }}
+        style={{ willChange: 'transform' }}
       >
         {earned && (
           <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: `linear-gradient(90deg,transparent,${meta.color},transparent)` }} />
@@ -134,7 +135,7 @@ function LeagueRing({ league = 'BRONZE', size = 148 }) {
           strokeLinecap="round" strokeDasharray={circ}
           initial={{ strokeDashoffset: circ }} animate={{ strokeDashoffset: circ * 0.15 }}
           transition={{ duration: 1.5, ease: 'easeOut', delay: 0.3 }}
-          style={{ transform: 'rotate(-90deg)', transformOrigin: `${size/2}px ${size/2}px`, filter: `drop-shadow(0 0 6px ${l.color})` }}
+          style={{ transform: 'rotate(-90deg)', transformOrigin: `${size/2}px ${size/2}px`, willChange: 'transform, stroke-dashoffset' }}
         />
       </svg>
       <Box sx={{ position: 'absolute', bottom: -2, left: '50%', transform: 'translateX(-50%)', bgcolor: l.color, px: 1, py: 0.15, borderRadius: '6px', zIndex: 2 }}>
@@ -213,7 +214,7 @@ export default function UserProfile() {
               <motion.div key={i}
                 animate={{ y: [0, -12, 0], opacity: [0.3, 0.8, 0.3] }}
                 transition={{ repeat: Infinity, duration: 3 + i * 0.4, delay: i * 0.3 }}
-                style={{ position: 'absolute', width: 4, height: 4, borderRadius: '50%', background: leagueColor, boxShadow: `0 0 8px ${leagueColor}`, left: `${10 + i * 11}%`, top: `${20 + (i % 3) * 25}%` }}
+                style={{ position: 'absolute', width: 4, height: 4, borderRadius: '50%', background: leagueColor, left: `${10 + i * 11}%`, top: `${20 + (i % 3) * 25}%`, willChange: 'transform, opacity' }}
               />
             ))}
             {/* League glow overlay */}

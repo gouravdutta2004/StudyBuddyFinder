@@ -8,7 +8,7 @@ import SharedWhiteboard from '../components/SharedWhiteboard';
 import StudyRoomChat from '../components/StudyRoomChat';
 import { ArrowLeft, Users, Loader2, Maximize, MessageSquare, FileText } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { Box, Typography, IconButton, Button } from '@mui/material';
+import { Box, Typography, IconButton, Button, useTheme } from '@mui/material';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import { io } from 'socket.io-client';
@@ -17,6 +17,9 @@ export default function StudyRoom() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+  
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showPanel, setShowPanel] = useState(true);
@@ -27,7 +30,6 @@ export default function StudyRoom() {
   useEffect(() => {
     const fetchSessionAndJoin = async () => {
       try {
-        // Fetch the global session via the new dedicated endpoint
         const res = await api.get(`/sessions/${id}`);
         const found = res.data;
         
@@ -36,16 +38,13 @@ export default function StudyRoom() {
           return navigate('/sessions');
         }
 
-        // Check if user is already a participant
         const isParticipant = found.participants?.some(p => p._id === user?._id || p === user?._id);
         const isHost = found.host?._id === user?._id || found.host === user?._id;
 
         if (!isParticipant && !isHost) {
-          // Attempt Auto-Join sequence for direct link sharers
           try {
             await api.post(`/sessions/${id}/join`);
             toast.success("Automatically joined the session via direct link!");
-            // Re-fetch populated session
             const joinedRes = await api.get(`/sessions/${id}`);
             setSession(joinedRes.data);
           } catch (joinErr) {
@@ -53,7 +52,6 @@ export default function StudyRoom() {
             return navigate('/sessions');
           }
         } else {
-          // Already a participant
           setSession(found);
         }
 
@@ -92,40 +90,70 @@ export default function StudyRoom() {
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', bgcolor: '#0f1115' }}>
-        <Loader2 className="animate-spin text-blue-500" size={40} />
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', bgcolor: isDark ? '#0f0f11' : '#f8f9fa' }}>
+        <Loader2 className="animate-spin text-blue-500" size={40} color={isDark ? '#fff' : '#000'} />
       </Box>
     );
   }
   if (!session) return null;
 
+  // Colors for Canvas Toolbar/UI
+  const surfaceColor = isDark ? '#1e1e1e' : '#ffffff';
+  const borderColor = isDark ? '#333333' : '#e0e0e0';
+  const textColor = isDark ? '#f4f4f5' : '#18181b';
+  const textMuted = isDark ? '#a1a1aa' : '#71717a';
+
   return (
-    <Box sx={{ display: 'flex', height: '100vh', bgcolor: '#0f111a', color: 'white', overflow: 'hidden', fontFamily: 'Inter, sans-serif' }}>
+    <Box sx={{ 
+      display: 'flex', height: '100vh', 
+      bgcolor: isDark ? '#121212' : '#f0f2f5', 
+      backgroundImage: `radial-gradient(${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'} 1px, transparent 1px)`,
+      backgroundSize: '24px 24px', // The Dot Grid
+      color: textColor, overflow: 'hidden', fontFamily: 'Inter, sans-serif', position: 'relative' 
+    }}>
        {/* Main Canvas Area */}
        <Box sx={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-           {/* Top Nav Overlay */}
-           <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 50, p: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', pointerEvents: 'none' }}>
-               <Box sx={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: 2, background: 'rgba(20,20,30,0.6)', backdropFilter: 'blur(16px)', px: 3, py: 1.5, borderRadius: '100px', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
-                   <IconButton onClick={() => navigate('/sessions')} sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.1)', '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' } }}><ArrowLeft size={18} /></IconButton>
-                   <Typography variant="subtitle1" fontWeight={700} sx={{ letterSpacing: 0.5 }}>{session.title}</Typography>
-                   <Box sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: 'rgba(255,255,255,0.3)' }} />
-                   <Typography variant="body2" color="rgba(255,255,255,0.7)" fontWeight={500}>{session.subject}</Typography>
-               </Box>
-               
-               <Box sx={{ pointerEvents: 'auto', background: 'rgba(20,20,30,0.6)', backdropFilter: 'blur(16px)', px: 2.5, py: 1.5, borderRadius: '100px', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 8px 32px rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', gap: 2 }}>
-                   <Typography variant="body2" fontWeight={600} display="flex" alignItems="center" gap={1}>
-                      <Users size={16} color="#60a5fa" /> 
-                      {session.participants?.length || 1} / {session.maxParticipants || '∞'}
-                   </Typography>
-                   <Box sx={{ width: '1px', height: 16, bgcolor: 'rgba(255,255,255,0.2)' }} />
-                   <IconButton size="small" onClick={toggleFullscreen} sx={{ color: 'white', '&:hover': { color: '#60a5fa' } }} title="Fullscreen Whiteboard">
-                     <Maximize size={16} />
-                   </IconButton>
+           
+           {/* Top Nav Overlay (Figma-style Minimal Toolbar) */}
+           <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 50, p: { xs: 2, md: 3 }, display: 'flex', justifyContent: 'center', alignItems: 'center', pointerEvents: 'none' }}>
+               <Box sx={{ 
+                 pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: { xs: 1.5, md: 3 }, 
+                 bgcolor: surfaceColor, px: 1, py: 1, borderRadius: '8px', 
+                 border: `1px solid ${borderColor}`, 
+                 boxShadow: isDark ? '0 4px 12px rgba(0,0,0,0.4)' : '0 4px 12px rgba(0,0,0,0.05)' 
+               }}>
+                   
+                   {/* Left Controls */}
+                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, pl: 1 }}>
+                     <IconButton size="small" onClick={() => navigate('/sessions')} sx={{ color: textMuted, borderRadius: 1, '&:hover': { bgcolor: isDark ? '#2c2c2c' : '#f4f4f5', color: textColor, transform: 'translateX(-2px)' }, transition: 'all 0.2s' }}><ArrowLeft size={16} /></IconButton>
+                     <Typography sx={{ fontWeight: 600, fontSize: '0.85rem', color: textColor, display: { xs: 'none', sm: 'block' } }}>{session.title}</Typography>
+                   </Box>
+
+                   <Box sx={{ width: 1, height: 16, bgcolor: borderColor }} />
+
+                   {/* Center Badge */}
+                   <Box sx={{ px: 1.5, py: 0.5, borderRadius: '4px', bgcolor: isDark ? '#27272a' : '#f4f4f5', border: `1px solid ${borderColor}`, display: 'flex', alignItems: 'center', gap: 1 }}>
+                     <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#3b82f6' }} />
+                     <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: textMuted, textTransform: 'uppercase', letterSpacing: 0.5 }}>{session.subject}</Typography>
+                   </Box>
+
+                   <Box sx={{ width: 1, height: 16, bgcolor: borderColor }} />
+                   
+                   {/* Right Controls */}
+                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, pr: 1 }}>
+                     <Typography sx={{ fontSize: '0.75rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 0.75, color: textMuted }}>
+                        <Users size={14} color={textMuted} /> 
+                        <Box component="span">{session.participants?.length || 1} <Box component="span" sx={{ opacity: 0.4 }}>/</Box> {session.maxParticipants || '∞'}</Box>
+                     </Typography>
+                     <IconButton size="small" onClick={toggleFullscreen} sx={{ color: textMuted, borderRadius: 1, '&:hover': { bgcolor: isDark ? '#2c2c2c' : '#f4f4f5', color: textColor }, transition: 'all 0.2s', ml: 1 }} title="Fullscreen Whiteboard">
+                       <Maximize size={14} />
+                     </IconButton>
+                   </Box>
                </Box>
            </Box>
 
            {/* Whiteboard occupying the entire background */}
-           <Box ref={whiteboardRef} sx={{ position: 'absolute', inset: 0, zIndex: 10, bgcolor: '#0f111a' }}>
+           <Box ref={whiteboardRef} sx={{ position: 'absolute', inset: 0, zIndex: 10, bgcolor: 'transparent' }}>
              {socket && <SharedWhiteboard roomId={id} socket={socket} />}
            </Box>
 
@@ -135,37 +163,57 @@ export default function StudyRoom() {
            </Box>
        </Box>
 
-       {/* Collapsible Side Panel */}
+       {/* Floating Canvas Inspector Panel */}
        <AnimatePresence>
          {showPanel && (
-            <motion.div
-               initial={{ width: 0, opacity: 0 }}
-               animate={{ width: 400, opacity: 1 }}
-               exit={{ width: 0, opacity: 0 }}
-               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-               style={{ borderLeft: '1px solid rgba(255,255,255,0.05)', background: '#13151a', display: 'flex', flexDirection: 'column', zIndex: 60 }}
-            >
-               <Box sx={{ p: 3, flex: 1, display: 'flex', flexDirection: 'column', gap: 2, overflowY: 'hidden' }}>
+             <motion.div
+               initial={{ x: 400, opacity: 0 }}
+               animate={{ x: 0, opacity: 1 }}
+               exit={{ x: 400, opacity: 0 }}
+               transition={{ type: 'spring', damping: 28, stiffness: 220 }}
+               style={{ 
+                 position: 'absolute', right: 24, top: 80, bottom: 24, width: 340, 
+                 borderRadius: '12px', background: surfaceColor, 
+                 border: `1px solid ${borderColor}`, 
+                 boxShadow: isDark ? '0 12px 32px rgba(0,0,0,0.4)' : '0 12px 32px rgba(0,0,0,0.1)', 
+                 display: 'flex', flexDirection: 'column', zIndex: 60, overflow: 'hidden' 
+               }}
+             >
+               <Box sx={{ p: 2, flex: 1, display: 'flex', flexDirection: 'column', gap: 2, overflowY: 'hidden' }}>
                    {/* Tabs Nav */}
-                   <Box sx={{ display: 'flex', bgcolor: 'rgba(0,0,0,0.3)', borderRadius: 3, p: 0.5 }}>
+                   <Box sx={{ display: 'flex', p: 0.5, bgcolor: isDark ? '#27272a' : '#f4f4f5', borderRadius: '8px', border: `1px solid ${borderColor}` }}>
                      <Button 
                        fullWidth 
                        onClick={() => setActiveTab('chat')} 
-                       sx={{ borderRadius: 2.5, bgcolor: activeTab === 'chat' ? 'rgba(59,130,246,0.2)' : 'transparent', color: activeTab === 'chat' ? '#60a5fa' : 'rgba(255,255,255,0.5)', py: 1, fontWeight: 700, textTransform: 'none', transition: 'all 0.2s', '&:hover': { bgcolor: activeTab === 'chat' ? 'rgba(59,130,246,0.25)' : 'rgba(255,255,255,0.05)' } }}
+                       sx={{ 
+                         borderRadius: '6px', 
+                         bgcolor: activeTab === 'chat' ? (isDark ? '#3f3f46' : '#ffffff') : 'transparent', 
+                         color: activeTab === 'chat' ? textColor : textMuted, 
+                         py: 0.75, fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: 0.5, 
+                         boxShadow: activeTab === 'chat' ? (isDark ? '0 1px 2px rgba(0,0,0,0.3)' : '0 1px 2px rgba(0,0,0,0.05)') : 'none',
+                         transition: 'all 0.2s', '&:hover': { bgcolor: activeTab === 'chat' ? undefined : (isDark ? '#3f3f46' : '#e4e4e7') } 
+                       }}
                      >
-                       <MessageSquare size={16} style={{ marginRight: 8 }} /> Chat
+                       <MessageSquare size={14} style={{ marginRight: 6 }} /> Chat
                      </Button>
                      <Button 
                        fullWidth 
                        onClick={() => setActiveTab('notes')} 
-                       sx={{ borderRadius: 2.5, bgcolor: activeTab === 'notes' ? 'rgba(59,130,246,0.2)' : 'transparent', color: activeTab === 'notes' ? '#60a5fa' : 'rgba(255,255,255,0.5)', py: 1, fontWeight: 700, textTransform: 'none', transition: 'all 0.2s', '&:hover': { bgcolor: activeTab === 'notes' ? 'rgba(59,130,246,0.25)' : 'rgba(255,255,255,0.05)' } }}
+                       sx={{ 
+                        borderRadius: '6px', 
+                        bgcolor: activeTab === 'notes' ? (isDark ? '#3f3f46' : '#ffffff') : 'transparent', 
+                        color: activeTab === 'notes' ? textColor : textMuted, 
+                        py: 0.75, fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: 0.5, 
+                        boxShadow: activeTab === 'notes' ? (isDark ? '0 1px 2px rgba(0,0,0,0.3)' : '0 1px 2px rgba(0,0,0,0.05)') : 'none',
+                        transition: 'all 0.2s', '&:hover': { bgcolor: activeTab === 'notes' ? undefined : (isDark ? '#3f3f46' : '#e4e4e7') } 
+                      }}
                      >
-                       <FileText size={16} style={{ marginRight: 8 }} /> Notes
+                       <FileText size={14} style={{ marginRight: 6 }} /> Notes
                      </Button>
-                  </Box>
+                   </Box>
 
                   {/* Tab Content Area */}
-                  <Box sx={{ flex: 1, pt: 1, overflowY: 'auto', '&::-webkit-scrollbar': { width: 6 }, '&::-webkit-scrollbar-thumb': { bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 10 }, display: 'flex', flexDirection: 'column' }}>
+                  <Box sx={{ flex: 1, pt: 1, overflowY: 'auto', '&::-webkit-scrollbar': { width: 4 }, '&::-webkit-scrollbar-thumb': { bgcolor: borderColor, borderRadius: 10 }, display: 'flex', flexDirection: 'column' }}>
                        {activeTab === 'chat' ? (
                          <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', animation: 'fadeIn 0.2s ease-in-out' }}>
                            {socket && <StudyRoomChat socket={socket} roomId={id} />}
