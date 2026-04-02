@@ -190,7 +190,7 @@ function RankRow({ leader, rank, isMe, isDark }) {
         </Box>
 
         {/* Streak */}
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, display: { xs: 'none', sm: 'flex' } }}>
+        <Box sx={{ display: { xs: 'none', sm: 'flex' }, flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4 }}>
             <Flame size={14} color="#f97316" />
             <Typography fontWeight={900} fontSize="0.9rem" color="#f97316">{leader.streak || 0}</Typography>

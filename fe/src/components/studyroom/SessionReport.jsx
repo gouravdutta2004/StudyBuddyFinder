@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Box, Typography, Button, Chip, Avatar } from '@mui/material';
 import { BarChart2, Clock, MessageSquare, Hand, Trophy, Zap, Share2, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -6,12 +6,17 @@ import { useAuth } from '../../context/AuthContext';
 
 export default function SessionReport({ socket, roomId, session, isDark, onClose }) {
   const { user } = useAuth();
-  const [stats, setStats] = useState({ messages: 0, handRaises: 0, pollVotes: 0, pomoCycles: 0, xpEarned: 0, minutesFocused: 0, joinTime: Date.now() });
+  const joinTime = useRef(null);
+  useEffect(() => { joinTime.current = performance.now(); }, []);
+  const [stats, setStats] = useState({ messages: 0, handRaises: 0, pollVotes: 0, pomoCycles: 0, xpEarned: 0, minutesFocused: 0 });
+  const [elapsed, setElapsed] = useState(0);
 
-  const bg = isDark ? '#18181b' : '#ffffff';
-  const border = isDark ? '#27272a' : '#e4e4e7';
-  const text = isDark ? '#f4f4f5' : '#18181b';
-  const muted = isDark ? '#71717a' : '#a1a1aa';
+  useEffect(() => {
+    const id = setInterval(() => {
+      setElapsed(joinTime.current != null ? Math.round((performance.now() - joinTime.current) / 60000) : 0);
+    }, 30000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     if (!socket) return;
@@ -19,9 +24,13 @@ export default function SessionReport({ socket, roomId, session, isDark, onClose
     socket.on('hand:raise', d => { if (d.userId === user?._id) setStats(s => ({ ...s, handRaises: s.handRaises + 1, xpEarned: s.xpEarned + 10 })); });
     socket.on('poll:vote', d => { if (d.userId === user?._id) setStats(s => ({ ...s, pollVotes: s.pollVotes + 1, xpEarned: s.xpEarned + 15 })); });
     socket.on('pomodoro:sync', d => { if (!d.running && d.mode === 'break') setStats(s => ({ ...s, pomoCycles: s.pomoCycles + 1, minutesFocused: s.minutesFocused + 25, xpEarned: s.xpEarned + 42 })); });
-  }, [socket, user]);
+    return () => { socket.off('room_message'); socket.off('hand:raise'); socket.off('poll:vote'); socket.off('pomodoro:sync'); };
+  }, [socket, user?._id]);
 
-  const elapsed = Math.round((Date.now() - stats.joinTime) / 60000);
+  const bg = isDark ? '#18181b' : '#ffffff';
+  const border = isDark ? '#27272a' : '#e4e4e7';
+  const text = isDark ? '#f4f4f5' : '#18181b';
+  const muted = isDark ? '#71717a' : '#a1a1aa';
 
   const ITEMS = [
     { icon: <Clock size={16} color="#6366f1" />, label: 'Time in Room', val: `${elapsed}m`, color: '#6366f1' },

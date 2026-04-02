@@ -1,132 +1,96 @@
 import React, { useState } from 'react';
-import { Box, Typography, Button, Container, MenuItem, Select, FormControl, InputLabel, Avatar } from '@mui/material';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Cpu, CheckCircle } from 'lucide-react';
+
+const majors = ['Computer Science','Engineering','Business','Pre-Med','Psychology','Mathematics','Design'];
+const needs  = ['Data Structures','Calculus','Organic Chemistry','Statistics','Physics','Writing'];
+const teaches = ['Programming','Linear Algebra','Biology','Economics','History','Design'];
+
+const matchData = [
+  { init: 'AK', name: 'Anika K.', info: 'Computer Science • Senior', match: '97% Match' },
+  { init: 'RJ', name: 'Rahul J.', info: 'Engineering • Junior',       match: '94% Match', green: true },
+  { init: 'SP', name: 'Sarah P.', info: 'Mathematics • Sophomore',    match: '91% Match', pink: true },
+];
 
 export default function PlayableSandbox() {
-  const [major, setMajor] = useState('');
-  const [needs, setNeeds] = useState('');
-  const [teaches, setTeaches] = useState('');
-  const [scanning, setScanning] = useState(false);
-  const [results, setResults] = useState([]);
+  const [major,   setMajor]   = useState('');
+  const [need,    setNeed]    = useState('');
+  const [teach,   setTeach]   = useState('');
+  const [ran,     setRan]     = useState(false);
 
-  const handleScan = () => {
-    if (!major || !needs || !teaches) return;
-    setScanning(true);
-    setResults([]);
-    
-    // Simulate AI scanning
-    setTimeout(() => {
-      setScanning(false);
-      setResults([
-        { id: 1, name: 'Alex M.', role: 'Computer Science', match: '98%', text: `Can teach ${needs}, wants to learn ${teaches}` },
-        { id: 2, name: 'Sarah J.', role: 'Mathematics', match: '91%', text: `Mutual interest in ${major}` },
-        { id: 3, name: 'David K.', role: 'Engineering', match: '87%', text: `Similar study velocity & timezone` }
-      ]);
-    }, 2000);
-  };
+  const handleRun = () => { if (major || need || teach) setRan(true); };
 
   return (
-    <Container maxWidth="md" sx={{ py: 15, position: 'relative', zIndex: 10 }}>
-      <Box sx={{ p: 4, borderRadius: '32px', bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', backdropFilter: 'blur(24px)' }}>
-        
-        <Typography variant="h3" fontWeight={900} color="white" mb={2} textAlign="center" sx={{ letterSpacing: '-1px' }}>Try the Algorithm.</Typography>
-        <Typography variant="body1" color="rgba(255,255,255,0.6)" mb={5} textAlign="center">Experience our smart matchmaking right here. Select your parameters below.</Typography>
-        
-        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3, mb: 4 }}>
-          <FormControl fullWidth sx={{ '& .MuiOutlinedInput-root': { bgcolor: 'rgba(0,0,0,0.3)', color: 'white', borderRadius: 3, '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' } } }}>
-            <InputLabel sx={{ color: 'rgba(255,255,255,0.5)' }}>My Major</InputLabel>
-            <Select value={major} onChange={(e) => setMajor(e.target.value)} label="My Major">
-              <MenuItem value="Computer Science">Computer Science</MenuItem>
-              <MenuItem value="Physics">Physics</MenuItem>
-              <MenuItem value="Mathematics">Mathematics</MenuItem>
-            </Select>
-          </FormControl>
-          
-          <FormControl fullWidth sx={{ '& .MuiOutlinedInput-root': { bgcolor: 'rgba(0,0,0,0.3)', color: 'white', borderRadius: 3, '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' } } }}>
-            <InputLabel sx={{ color: 'rgba(255,255,255,0.5)' }}>I need help with</InputLabel>
-            <Select value={needs} onChange={(e) => setNeeds(e.target.value)} label="I need help with">
-              <MenuItem value="Algorithms">Algorithms</MenuItem>
-              <MenuItem value="Calculus">Calculus</MenuItem>
-              <MenuItem value="Quantum Mechanics">Quantum Mechanics</MenuItem>
-            </Select>
-          </FormControl>
+    <section id="demo" style={{ padding:'5.5rem 0', position:'relative', zIndex:10, background:'radial-gradient(ellipse at center,rgba(124,58,237,0.05),transparent 70%)' }}>
+      <style>{`
+        .demo-card { background:#0f1423; border:1.5px solid rgba(124,58,237,0.14); border-radius:2rem; box-shadow:0 20px 60px rgba(0,0,0,0.5),0 0 60px rgba(124,58,237,0.1); overflow:hidden; position:relative; max-width:860px; margin:0 auto; }
+        .demo-controls { display:flex; align-items:center; justify-content:center; gap:.85rem; flex-wrap:wrap; padding:1.25rem 2rem; }
+        .dsel { background:rgba(0,0,0,0.3); border:1.5px solid rgba(255,255,255,0.15); border-radius:9999px; padding:.75rem 2.5rem .75rem 1.25rem; color:#8b8fa8; font-size:.875rem; font-family:inherit; min-width:175px; appearance:none; background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%238b8fa8' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 14px center; cursor:pointer; transition:.2s; }
+        .dsel:focus { outline:none; border-color:#7c3aed; box-shadow:0 0 0 3px rgba(124,58,237,0.2); }
+        .dsel option { background:#141a2e; color:#f0f0f5; }
+        .drun { padding:.8rem 1.75rem; background:linear-gradient(135deg,#7c3aed,#5b21b6); border:none; border-radius:9999px; color:#fff; font-weight:700; font-size:.95rem; font-family:inherit; cursor:pointer; transition:.3s; white-space:nowrap; }
+        .drun:hover { transform:translateY(-2px); box-shadow:0 0 60px rgba(124,58,237,0.2); }
+        .dresults { padding:0 2rem 2.5rem; min-height:100px; }
+        .dempty { text-align:center; color:#5a5f7a; font-size:.82rem; padding:1.5rem; border:1px dashed rgba(255,255,255,0.06); border-radius:1rem; background:rgba(0,0,0,0.1); }
+        .mgrid { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; }
+        .mc { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:1rem; padding:1.25rem; transition:.3s; animation: mci .45s ease forwards; opacity:0; }
+        .mc:nth-child(2){animation-delay:.13s}.mc:nth-child(3){animation-delay:.26s}
+        .mc:hover{border-color:rgba(124,58,237,0.25);transform:translateY(-4px)}
+        @keyframes mci{to{opacity:1;transform:translateY(0)}}
+        .mav{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.78rem;color:#fff;margin-bottom:.7rem}
+        .mn{font-weight:700;font-size:.9rem;margin-bottom:.2rem;color:#f0f0f5}
+        .mi{font-size:.72rem;color:#5a5f7a}
+        .ms{display:inline-block;margin-top:.5rem;padding:.18rem .55rem;background:rgba(16,185,129,0.14);border-radius:9999px;font-size:.68rem;font-weight:700;color:#10b981}
+        @media(max-width:640px){.demo-controls{flex-direction:column;align-items:stretch}.dsel{min-width:unset;width:100%}.mgrid{grid-template-columns:1fr}}
+      `}</style>
 
-          <FormControl fullWidth sx={{ '& .MuiOutlinedInput-root': { bgcolor: 'rgba(0,0,0,0.3)', color: 'white', borderRadius: 3, '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' } } }}>
-            <InputLabel sx={{ color: 'rgba(255,255,255,0.5)' }}>I can teach</InputLabel>
-            <Select value={teaches} onChange={(e) => setTeaches(e.target.value)} label="I can teach">
-              <MenuItem value="Data Structures">Data Structures</MenuItem>
-              <MenuItem value="Linear Algebra">Linear Algebra</MenuItem>
-              <MenuItem value="Python">Python</MenuItem>
-            </Select>
-          </FormControl>
-        </Box>
+      <div className="sf-w">
+        <div className="sf-sh" style={{marginBottom:'2.5rem'}}>
+          <div className="sf-sbadge"><span className="sf-dot"/>&nbsp;Live Demo</div>
+          <h2 className="sf-h2" style={{color:'#f0f0f5'}}>Try the <span className="gt">Algorithm.</span></h2>
+          <p className="sf-p">Experience our smart matchmaking right here. Select your parameters below.</p>
+        </div>
 
-        <Box sx={{ textAlign: 'center' }}>
-          <Button 
-            variant="contained" 
-            onClick={handleScan}
-            disabled={!major || !needs || !teaches || scanning}
-            sx={{ 
-              bgcolor: '#6366f1', color: 'white', borderRadius: 8, px: 5, py: 1.5, fontWeight: 800, textTransform: 'none',
-              '&:hover': { bgcolor: '#4f46e5' }, '&.Mui-disabled': { bgcolor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.3)' }
-            }}
-          >
-            {scanning ? 'Scanning Network...' : 'Run Matchmaker'}
-          </Button>
-        </Box>
+        <div className="demo-card">
+          <div style={{textAlign:'center',padding:'2.5rem 1.5rem 1rem'}}>
+            <h3 style={{fontFamily:'"Space Grotesk",sans-serif',fontSize:'clamp(1.5rem,3.5vw,2.5rem)',fontWeight:900,marginBottom:'.4rem',color:'#f0f0f5'}}>
+              Run the <span className="gt">Matchmaker.</span>
+            </h3>
+            <p style={{fontSize:'.9rem',color:'#8b8fa8'}}>Select your preferences and see matched students instantly.</p>
+          </div>
 
-        {/* Animation & Results Area */}
-        <Box sx={{ mt: 5, minHeight: 250, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <AnimatePresence mode="wait">
-            {scanning && (
-              <motion.div 
-                key="scanner"
-                initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
-                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}
-              >
-                <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: "linear" }}>
-                  <Box sx={{ width: 80, height: 80, borderRadius: '50%', border: '4px solid rgba(99, 102, 241, 0.2)', borderTopColor: '#6366f1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Cpu size={24} color="#818cf8" />
-                  </Box>
-                </motion.div>
-                <Typography variant="body1" color="#818cf8" fontWeight={700} sx={{ letterSpacing: 2 }}>ANALYZING 10,000+ PROFILES</Typography>
-              </motion.div>
-            )}
+          <div className="demo-controls">
+            <select className="dsel" value={major} onChange={e=>setMajor(e.target.value)}>
+              <option value="" disabled>My Major</option>
+              {majors.map(m=><option key={m}>{m}</option>)}
+            </select>
+            <select className="dsel" value={need} onChange={e=>setNeed(e.target.value)}>
+              <option value="" disabled>I need help with</option>
+              {needs.map(n=><option key={n}>{n}</option>)}
+            </select>
+            <select className="dsel" value={teach} onChange={e=>setTeach(e.target.value)}>
+              <option value="" disabled>I can teach</option>
+              {teaches.map(t=><option key={t}>{t}</option>)}
+            </select>
+            <button className="drun" onClick={handleRun}>Run Matchmaker</button>
+          </div>
 
-            {results.length > 0 && (
-              <Box key="results" sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {results.map((res, i) => (
-                  <motion.div 
-                    key={res.id}
-                    initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} transition={{ type: "spring", delay: i * 0.15 }}
-                  >
-                    <Box sx={{ 
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 3, 
-                      bgcolor: 'rgba(0,0,0,0.4)', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)'
-                    }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Avatar sx={{ bgcolor: i === 0 ? '#10b981' : '#6366f1' }}>{res.name[0]}</Avatar>
-                        <Box>
-                          <Typography variant="subtitle1" color="white" fontWeight={700}>{res.name}</Typography>
-                          <Typography variant="body2" color="rgba(255,255,255,0.5)">{res.text}</Typography>
-                        </Box>
-                      </Box>
-                      <Box sx={{ textAlign: 'right' }}>
-                        <Typography variant="h6" color="#10b981" fontWeight={900} display="flex" alignItems="center" gap={0.5}>
-                          <CheckCircle size={18} /> {res.match}
-                        </Typography>
-                        <Typography variant="caption" color="rgba(255,255,255,0.4)">Match Score</Typography>
-                      </Box>
-                    </Box>
-                  </motion.div>
+          <div className="dresults">
+            {!ran ? (
+              <div className="dempty">Select your preferences and hit "Run Matchmaker" to see your matches.</div>
+            ) : (
+              <div className="mgrid">
+                {matchData.map((m,i)=>(
+                  <div className="mc" key={i}>
+                    <div className="mav" style={{background: m.green ? 'linear-gradient(135deg,#10b981,#059669)' : m.pink ? 'linear-gradient(135deg,#ec4899,#be185d)' : 'linear-gradient(135deg,#7c3aed,#5b21b6)'}}>{m.init}</div>
+                    <div className="mn">{m.name}</div>
+                    <div className="mi">{m.info}</div>
+                    <span className="ms">{m.match}</span>
+                  </div>
                 ))}
-              </Box>
+              </div>
             )}
-          </AnimatePresence>
-        </Box>
-
-      </Box>
-    </Container>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }

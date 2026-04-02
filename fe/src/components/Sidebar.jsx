@@ -162,7 +162,7 @@ export default function Sidebar({ mobileOpen = false, setMobileOpen = () => {} }
         borderRight: '1px solid',
         borderColor: isDark ? 'rgba(99,102,241,0.1)' : 'rgba(0,0,0,0.07)',
         boxShadow: isDark ? '4px 0 32px rgba(0,0,0,0.5)' : '4px 0 20px rgba(0,0,0,0.06)',
-        transition: 'background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease',
+        willChange: 'width, background-color',
       }}
     >
       {/* ── Logo / Brand ── */}
