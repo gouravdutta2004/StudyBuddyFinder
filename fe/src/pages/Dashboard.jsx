@@ -20,6 +20,9 @@ import FocusTimerWidget     from '../components/dashboard/FocusTimerWidget';
 import MiniCalendarWidget   from '../components/dashboard/MiniCalendarWidget';
 import StudyAnalyticsWidget from '../components/dashboard/StudyAnalyticsWidget';
 import BountiesWidget       from '../components/dashboard/BountiesWidget';
+import AIAssistantWidget    from '../components/AIAssistantWidget';
+import GlobalMessengerWidget from '../components/GlobalMessengerWidget';
+import SupportWidget        from '../components/SupportWidget';
 
 /* ─────────────── Animated Counter ─────────────── */
 function AnimCount({ target, prefix = '', suffix = '' }) {
@@ -811,6 +814,11 @@ export default function Dashboard() {
 
         </Box>
       </Box>
+
+      {/* ── Floating right-side widget dock (Dashboard only) ── */}
+      <AIAssistantWidget />
+      <GlobalMessengerWidget />
+      <SupportWidget />
     </Box>
   );
 }

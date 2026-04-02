@@ -29,7 +29,7 @@ import AdminPanel from './pages/AdminPanel';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Billing from './pages/Billing';
-import SupportWidget from './components/SupportWidget';
+
 import Onboarding from './pages/Onboarding';
 import Leaderboard from './pages/Leaderboard';
 import GlobalAnnouncementBanner from './components/GlobalAnnouncementBanner';
@@ -45,8 +45,6 @@ import Analytics from './pages/Analytics';
 import LiveRooms from './pages/LiveRooms';
 
 
-import AIAssistantWidget from './components/AIAssistantWidget';
-import GlobalMessengerWidget from './components/GlobalMessengerWidget';
 import CustomCursor from './components/CustomCursor';
 import CommandPalette from './components/CommandPalette';
 import React from 'react';
@@ -114,9 +112,7 @@ const Layout = ({ children }) => {
         </Box>
       </Box>
 
-      <SupportWidget />
-      <GlobalMessengerWidget />
-      <AIAssistantWidget />
+      {/* Widgets are rendered in Dashboard.jsx only */}
     </Box>
   );
 };
