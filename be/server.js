@@ -52,6 +52,13 @@ app.get('/api/health', (req, res) => res.json({ status: 'OK', message: 'StudyFri
 const onlineUsers = new Map();
 app.set('onlineUsers', onlineUsers);
 
+// ----- LIVE ROOMS TRACKING -----
+const liveRooms = new Map(); // roomId -> { roomId, title, subject, participants[], hostName }
+app.set('liveRooms', liveRooms);
+
+// ----- COLLAB NOTES PER ROOM -----
+const roomNotes = new Map(); // roomId -> string (current note content)
+
 const http = require('http');
 const { Server } = require('socket.io');
 
@@ -86,26 +93,85 @@ io.on('connection', (socket) => {
       onlineUsers.delete(socket.userId);
       socket.to(socket.organizationId).emit('user_status_change', { userId: socket.userId, status: 'offline' });
     }
+    // Remove from any live room they were in
+    if (socket.liveRoomId) {
+      const room = liveRooms.get(socket.liveRoomId);
+      if (room) {
+        room.participants = room.participants.filter(p => p.socketId !== socket.id);
+        if (room.participants.length === 0) {
+          liveRooms.delete(socket.liveRoomId);
+        } else {
+          liveRooms.set(socket.liveRoomId, room);
+        }
+        io.emit('live_rooms_update', Array.from(liveRooms.values()));
+      }
+    }
   });
 
   // Walled Garden Presence
   socket.on('join_campus', ({ userId, organizationId }) => {
-    if (!organizationId) return; // Ignore global users
+    if (!organizationId) return;
     socket.join(organizationId);
-    
-    // Attach identifying data to this socket session for disconnect cleanup
     socket.userId = userId;
     socket.organizationId = organizationId;
-    
     onlineUsers.set(userId, socket.id);
     socket.to(organizationId).emit('user_status_change', { userId, status: 'online' });
   });
 
-  // Collaboration Features: WebRTC and Whiteboard
-  socket.on('join_study_room', (roomId) => {
-    socket.join(roomId);
-    // Notify others that a new user joined this room
-    socket.to(roomId).emit('user_joined_room', socket.id);
+  // ── Study Room: WebRTC, Whiteboard, Live Rooms, Collab Notes ──
+  socket.on('join_study_room', ({ roomId, userId, userName, title, subject } = {}) => {
+    // Support both old string format and new object format
+    const rId = typeof roomId === 'string' ? roomId : (roomId?.roomId || roomId);
+    socket.join(rId);
+    socket.liveRoomId = rId;
+    socket.userId = userId || socket.userId;
+
+    // Register in live rooms
+    if (!liveRooms.has(rId)) {
+      liveRooms.set(rId, { roomId: rId, title: title || 'Study Room', subject: subject || 'General', participants: [] });
+    }
+    const room = liveRooms.get(rId);
+    if (!room.participants.find(p => p.socketId === socket.id)) {
+      room.participants.push({ socketId: socket.id, userId, userName: userName || 'Scholar' });
+    }
+    liveRooms.set(rId, room);
+
+    // Broadcast updated live rooms list to everyone
+    io.emit('live_rooms_update', Array.from(liveRooms.values()));
+
+    // Notify others in room
+    socket.to(rId).emit('user_joined_room', socket.id);
+
+    // Send current collab notes to new joiner
+    const currentNotes = roomNotes.get(rId) || '';
+    socket.emit('collab_notes_init', { roomId: rId, content: currentNotes });
+  });
+
+  socket.on('leave_study_room', async ({ roomId } = {}) => {
+    const rId = typeof roomId === 'string' ? roomId : roomId?.roomId;
+    if (!rId) return;
+    socket.leave(rId);
+    socket.liveRoomId = null;
+
+    const room = liveRooms.get(rId);
+    if (room) {
+      room.participants = room.participants.filter(p => p.socketId !== socket.id);
+      if (room.participants.length === 0) {
+        liveRooms.delete(rId);
+        // Persist collab notes to DB when last user leaves
+        const finalNotes = roomNotes.get(rId);
+        if (finalNotes) {
+          try {
+            const Session = require('./src/models/Session');
+            await Session.findByIdAndUpdate(rId, { collabNotes: finalNotes });
+          } catch (e) { /* silent */ }
+          roomNotes.delete(rId);
+        }
+      } else {
+        liveRooms.set(rId, room);
+      }
+      io.emit('live_rooms_update', Array.from(liveRooms.values()));
+    }
   });
 
   socket.on('room_message', ({ roomId, message }) => {
@@ -113,8 +179,6 @@ io.on('connection', (socket) => {
   });
 
   socket.on('webrtc_signal', (data) => {
-    // data: { to: socketId, signal: object }
-    // Send the signal to the specific peer
     io.to(data.to).emit('webrtc_signal', {
       signal: data.signal,
       from: socket.id
@@ -124,7 +188,14 @@ io.on('connection', (socket) => {
   socket.on('whiteboard_update', ({ roomId, elements }) => {
     socket.to(roomId).emit('whiteboard_update', elements);
   });
+
+  // ── Collaborative Notes ──
+  socket.on('collab_notes_update', ({ roomId, content }) => {
+    roomNotes.set(roomId, content);
+    socket.to(roomId).emit('collab_notes_update', { content });
+  });
 });
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => console.log(`Server running on port ${PORT} with WebSockets enabled`));
+

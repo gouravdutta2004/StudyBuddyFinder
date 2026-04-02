@@ -4,8 +4,9 @@ import { Link as RouterLink, useLocation } from 'react-router-dom';
 import {
   BookOpen, Search, Users, Trophy, Calendar, Globe,
   MessageCircle, CreditCard, MapPin, Shield, Gamepad2,
-  Joystick, ChevronRight, Zap, Network
+  Joystick, ChevronRight, Zap, Network, BrainCircuit, BarChart2, Radio
 } from 'lucide-react';
+
 import { useAuth } from '../context/AuthContext';
 import { io } from 'socket.io-client';
 import toast from 'react-hot-toast';
@@ -20,14 +21,17 @@ const NAV = [
   { to: '/arcade',       icon: Joystick,       label: 'Arcade',        color: '#f59e0b' },
   { to: '/leaderboard',  icon: Trophy,         label: 'Leaderboard',   color: '#eab308' },
   { to: '/sessions',     icon: Calendar,       label: 'Sessions',      color: '#38bdf8' },
-  { to: '/groups',       icon: Globe,          label: 'Squads',        color: '#10b981' },
+  { to: '/live',         icon: Radio,          label: 'Live Rooms',    color: '#10b981' },
+  { to: '/groups',       icon: Globe,          label: 'Squads',        color: '#059669' },
+  { to: '/flashcards',   icon: BrainCircuit,   label: 'Flashcards',    color: '#8b5cf6' },
+  { to: '/analytics',    icon: BarChart2,      label: 'Analytics',     color: '#06b6d4' },
   { to: '/map',          icon: MapPin,         label: 'Nearby Map',    color: '#f97316' },
   { to: '/messages',     icon: MessageCircle,  label: 'Messages',      color: '#818cf8' },
   { to: '/connections',  icon: Users,          label: 'Connections',   color: '#06b6d4' },
   { to: '/billing',      icon: CreditCard,     label: 'Billing',       color: '#f43f5e' },
 ];
 
-const SECTION_BREAKS = [3, 6, 9]; // indices where a divider appears
+const SECTION_BREAKS = [3, 6, 11];
 
 /* ─── Rail item ─── */
 function RailItem({ to, icon: Icon, label, color, isActive, expanded, unread, onClick }) {

@@ -81,8 +81,10 @@ const joinSession = async (req, res) => {
   try {
     const session = await Session.findById(req.params.id);
     if (!session) return res.status(404).json({ message: 'Session not found' });
-    if (session.participants.includes(req.user._id))
-      return res.status(400).json({ message: 'Already joined' });
+    // Already a participant — just return success (idempotent join)
+    if (session.participants.map(p => p.toString()).includes(req.user._id.toString())) {
+      return res.json({ message: 'Already joined', alreadyMember: true });
+    }
     if (session.participants.length >= session.maxParticipants)
       return res.status(400).json({ message: 'Session is full' });
     session.participants.push(req.user._id);
@@ -103,6 +105,7 @@ const joinSession = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
 
 const leaveSession = async (req, res) => {
   try {
@@ -167,4 +170,36 @@ const rsvpSession = async (req, res) => {
   }
 };
 
-module.exports = { createSession, getSessions, getMySessions, getSessionById, joinSession, leaveSession, deleteSession, addNote, rsvpSession };
+
+const updateCollabNotes = async (req, res) => {
+  try {
+    const { content } = req.body;
+    if (content === undefined) return res.status(400).json({ message: 'content is required' });
+    const session = await Session.findById(req.params.id);
+    if (!session) return res.status(404).json({ message: 'Session not found' });
+    // Allow host or any participant to save notes
+    const isParticipant = session.participants.map(p => p.toString()).includes(req.user._id.toString());
+    const isHost = session.host.toString() === req.user._id.toString();
+    if (!isParticipant && !isHost) {
+      return res.status(403).json({ message: 'Not authorized to edit notes for this session' });
+    }
+    session.collabNotes = content;
+    await session.save();
+    res.json({ message: 'Collab notes saved', collabNotes: session.collabNotes });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const getCollabNotes = async (req, res) => {
+  try {
+    const session = await Session.findById(req.params.id).select('collabNotes host participants');
+    if (!session) return res.status(404).json({ message: 'Session not found' });
+    res.json({ collabNotes: session.collabNotes || '' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+module.exports = { createSession, getSessions, getMySessions, getSessionById, joinSession, leaveSession, deleteSession, addNote, rsvpSession, updateCollabNotes, getCollabNotes };
+

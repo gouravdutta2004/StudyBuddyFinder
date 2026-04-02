@@ -23,6 +23,8 @@ router.put('/profile/location', protect, updateLocation);
 router.put('/profile', protect, updateProfile);
 router.post('/log-study', protect, logStudy);
 router.post('/sync-github', protect, require('../controllers/userController').syncGithub);
+router.get('/analytics/me', protect, require('../controllers/userController').getMyAnalytics);
+
 
 // Dynamic segment routes below
 router.get('/:id/quick-peek', protect, require('../controllers/userController').getQuickPeek);

@@ -6,7 +6,8 @@ import NotesUploader from '../components/NotesUploader';
 import VideoRoom from '../components/VideoRoom';
 import SharedWhiteboard from '../components/SharedWhiteboard';
 import StudyRoomChat from '../components/StudyRoomChat';
-import { ArrowLeft, Users, Loader2, Maximize, MessageSquare, FileText } from 'lucide-react';
+import CollabNotes from '../components/CollabNotes';
+import { ArrowLeft, Users, Loader2, Maximize, MessageSquare, FileText, PenLine } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { Box, Typography, IconButton, Button, useTheme } from '@mui/material';
 // eslint-disable-next-line no-unused-vars
@@ -34,7 +35,7 @@ export default function StudyRoom() {
         const found = res.data;
         
         if (!found) {
-          toast.error("Session not found");
+          toast.error('Session not found');
           return navigate('/sessions');
         }
 
@@ -44,11 +45,11 @@ export default function StudyRoom() {
         if (!isParticipant && !isHost) {
           try {
             await api.post(`/sessions/${id}/join`);
-            toast.success("Automatically joined the session via direct link!");
+            toast.success('Automatically joined the session via direct link!');
             const joinedRes = await api.get(`/sessions/${id}`);
             setSession(joinedRes.data);
           } catch (joinErr) {
-            toast.error(joinErr.response?.data?.message || "Session is full or unavailable.");
+            toast.error(joinErr.response?.data?.message || 'Session is full or unavailable.');
             return navigate('/sessions');
           }
         } else {
@@ -56,7 +57,7 @@ export default function StudyRoom() {
         }
 
       } catch (err) {
-        console.error("StudyRoom Load Error:", err);
+        console.error('StudyRoom Load Error:', err);
         toast.error(err.response?.data?.message || err.message || 'Failed to load study room or verify permissions');
         navigate('/sessions');
       } finally {
@@ -73,10 +74,19 @@ export default function StudyRoom() {
     if (!session) return;
     const wsUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5001';
     const newSocket = io(wsUrl, { withCredentials: true });
-    newSocket.emit('join_study_room', id);
+    newSocket.emit('join_study_room', {
+      roomId: id,
+      userId: user?._id,
+      userName: user?.name,
+      title: session.title,
+      subject: session.subject,
+    });
     setSocket(newSocket);
-    return () => newSocket.disconnect();
-  }, [id, session]);
+    return () => {
+      newSocket.emit('leave_study_room', { roomId: id });
+      newSocket.disconnect();
+    };
+  }, [id, session, user]);
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement && whiteboardRef.current) {
@@ -97,24 +107,29 @@ export default function StudyRoom() {
   }
   if (!session) return null;
 
-  // Colors for Canvas Toolbar/UI
   const surfaceColor = isDark ? '#1e1e1e' : '#ffffff';
   const borderColor = isDark ? '#333333' : '#e0e0e0';
   const textColor = isDark ? '#f4f4f5' : '#18181b';
   const textMuted = isDark ? '#a1a1aa' : '#71717a';
+
+  const TABS = [
+    { key: 'chat',   icon: <MessageSquare size={11} />, label: 'Chat' },
+    { key: 'notes',  icon: <FileText size={11} />,      label: 'Files' },
+    { key: 'collab', icon: <PenLine size={11} />,       label: 'Notes' },
+  ];
 
   return (
     <Box sx={{ 
       display: 'flex', height: '100vh', 
       bgcolor: isDark ? '#121212' : '#f0f2f5', 
       backgroundImage: `radial-gradient(${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'} 1px, transparent 1px)`,
-      backgroundSize: '24px 24px', // The Dot Grid
+      backgroundSize: '24px 24px',
       color: textColor, overflow: 'hidden', fontFamily: 'Inter, sans-serif', position: 'relative' 
     }}>
        {/* Main Canvas Area */}
        <Box sx={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
            
-           {/* Top Nav Overlay (Figma-style Minimal Toolbar) */}
+           {/* Top Nav Overlay */}
            <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 50, p: { xs: 2, md: 3 }, display: 'flex', justifyContent: 'center', alignItems: 'center', pointerEvents: 'none' }}>
                <Box sx={{ 
                  pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: { xs: 1.5, md: 3 }, 
@@ -122,8 +137,6 @@ export default function StudyRoom() {
                  border: `1px solid ${borderColor}`, 
                  boxShadow: isDark ? '0 4px 12px rgba(0,0,0,0.4)' : '0 4px 12px rgba(0,0,0,0.05)' 
                }}>
-                   
-                   {/* Left Controls */}
                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, pl: 1 }}>
                      <IconButton size="small" onClick={() => navigate('/sessions')} sx={{ color: textMuted, borderRadius: 1, '&:hover': { bgcolor: isDark ? '#2c2c2c' : '#f4f4f5', color: textColor, transform: 'translateX(-2px)' }, transition: 'all 0.2s' }}><ArrowLeft size={16} /></IconButton>
                      <Typography sx={{ fontWeight: 600, fontSize: '0.85rem', color: textColor, display: { xs: 'none', sm: 'block' } }}>{session.title}</Typography>
@@ -131,7 +144,6 @@ export default function StudyRoom() {
 
                    <Box sx={{ width: 1, height: 16, bgcolor: borderColor }} />
 
-                   {/* Center Badge */}
                    <Box sx={{ px: 1.5, py: 0.5, borderRadius: '4px', bgcolor: isDark ? '#27272a' : '#f4f4f5', border: `1px solid ${borderColor}`, display: 'flex', alignItems: 'center', gap: 1 }}>
                      <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#3b82f6' }} />
                      <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: textMuted, textTransform: 'uppercase', letterSpacing: 0.5 }}>{session.subject}</Typography>
@@ -139,7 +151,6 @@ export default function StudyRoom() {
 
                    <Box sx={{ width: 1, height: 16, bgcolor: borderColor }} />
                    
-                   {/* Right Controls */}
                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, pr: 1 }}>
                      <Typography sx={{ fontSize: '0.75rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 0.75, color: textMuted }}>
                         <Users size={14} color={textMuted} /> 
@@ -152,18 +163,18 @@ export default function StudyRoom() {
                </Box>
            </Box>
 
-           {/* Whiteboard occupying the entire background */}
+           {/* Whiteboard */}
            <Box ref={whiteboardRef} sx={{ position: 'absolute', inset: 0, zIndex: 10, bgcolor: 'transparent' }}>
              {socket && <SharedWhiteboard roomId={id} socket={socket} />}
            </Box>
 
-           {/* Floating Video Dock on the left bottom */}
+           {/* Video Dock */}
            <Box sx={{ position: 'absolute', bottom: 32, left: 32, zIndex: 50, pointerEvents: 'none', width: 'auto', maxWidth: 1200 }}>
               {socket && <VideoRoom roomId={id} socket={socket} onTogglePanel={() => setShowPanel(!showPanel)} showPanel={showPanel} />}
            </Box>
        </Box>
 
-       {/* Floating Canvas Inspector Panel */}
+       {/* Side Panel */}
        <AnimatePresence>
          {showPanel && (
              <motion.div
@@ -181,46 +192,39 @@ export default function StudyRoom() {
              >
                <Box sx={{ p: 2, flex: 1, display: 'flex', flexDirection: 'column', gap: 2, overflowY: 'hidden' }}>
                    {/* Tabs Nav */}
-                   <Box sx={{ display: 'flex', p: 0.5, bgcolor: isDark ? '#27272a' : '#f4f4f5', borderRadius: '8px', border: `1px solid ${borderColor}` }}>
-                     <Button 
-                       fullWidth 
-                       onClick={() => setActiveTab('chat')} 
-                       sx={{ 
-                         borderRadius: '6px', 
-                         bgcolor: activeTab === 'chat' ? (isDark ? '#3f3f46' : '#ffffff') : 'transparent', 
-                         color: activeTab === 'chat' ? textColor : textMuted, 
-                         py: 0.75, fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: 0.5, 
-                         boxShadow: activeTab === 'chat' ? (isDark ? '0 1px 2px rgba(0,0,0,0.3)' : '0 1px 2px rgba(0,0,0,0.05)') : 'none',
-                         transition: 'all 0.2s', '&:hover': { bgcolor: activeTab === 'chat' ? undefined : (isDark ? '#3f3f46' : '#e4e4e7') } 
-                       }}
-                     >
-                       <MessageSquare size={14} style={{ marginRight: 6 }} /> Chat
-                     </Button>
-                     <Button 
-                       fullWidth 
-                       onClick={() => setActiveTab('notes')} 
-                       sx={{ 
-                        borderRadius: '6px', 
-                        bgcolor: activeTab === 'notes' ? (isDark ? '#3f3f46' : '#ffffff') : 'transparent', 
-                        color: activeTab === 'notes' ? textColor : textMuted, 
-                        py: 0.75, fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: 0.5, 
-                        boxShadow: activeTab === 'notes' ? (isDark ? '0 1px 2px rgba(0,0,0,0.3)' : '0 1px 2px rgba(0,0,0,0.05)') : 'none',
-                        transition: 'all 0.2s', '&:hover': { bgcolor: activeTab === 'notes' ? undefined : (isDark ? '#3f3f46' : '#e4e4e7') } 
-                      }}
-                     >
-                       <FileText size={14} style={{ marginRight: 6 }} /> Notes
-                     </Button>
+                   <Box sx={{ display: 'flex', p: 0.5, bgcolor: isDark ? '#27272a' : '#f4f4f5', borderRadius: '8px', border: `1px solid ${borderColor}`, gap: 0.25 }}>
+                     {TABS.map(tab => (
+                       <Button key={tab.key} fullWidth onClick={() => setActiveTab(tab.key)}
+                         sx={{
+                           borderRadius: '6px', minWidth: 0,
+                           bgcolor: activeTab === tab.key ? (isDark ? '#3f3f46' : '#ffffff') : 'transparent',
+                           color: activeTab === tab.key ? textColor : textMuted,
+                           py: 0.6, fontWeight: 600, fontSize: '0.62rem', textTransform: 'uppercase', letterSpacing: 0.5,
+                           boxShadow: activeTab === tab.key ? (isDark ? '0 1px 2px rgba(0,0,0,0.3)' : '0 1px 2px rgba(0,0,0,0.05)') : 'none',
+                           transition: 'all 0.2s', '&:hover': { bgcolor: activeTab === tab.key ? undefined : (isDark ? '#3f3f46' : '#e4e4e7') },
+                           display: 'flex', gap: 0.5, alignItems: 'center',
+                         }}
+                       >
+                         {tab.icon}{tab.label}
+                       </Button>
+                     ))}
                    </Box>
 
-                  {/* Tab Content Area */}
+                  {/* Tab Content */}
                   <Box sx={{ flex: 1, pt: 1, overflowY: 'auto', '&::-webkit-scrollbar': { width: 4 }, '&::-webkit-scrollbar-thumb': { bgcolor: borderColor, borderRadius: 10 }, display: 'flex', flexDirection: 'column' }}>
-                       {activeTab === 'chat' ? (
-                         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', animation: 'fadeIn 0.2s ease-in-out' }}>
+                       {activeTab === 'chat' && (
+                         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                            {socket && <StudyRoomChat socket={socket} roomId={id} />}
                          </Box>
-                       ) : (
-                         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', animation: 'fadeIn 0.2s ease-in-out' }}>
+                       )}
+                       {activeTab === 'notes' && (
+                         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                            <NotesUploader session={session} setSession={setSession} />
+                         </Box>
+                       )}
+                       {activeTab === 'collab' && (
+                         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
+                           {socket && <CollabNotes roomId={id} sessionId={id} socket={socket} />}
                          </Box>
                        )}
                   </Box>

@@ -40,6 +40,10 @@ import OrgAdminDashboard from './pages/OrgAdminDashboard';
 import OrgAdminLogin from './pages/OrgAdminLogin';
 import Gamification from './pages/Gamification';
 import Arcade from './pages/Arcade';
+import Flashcards from './pages/Flashcards';
+import Analytics from './pages/Analytics';
+import LiveRooms from './pages/LiveRooms';
+
 
 import AIAssistantWidget from './components/AIAssistantWidget';
 import GlobalMessengerWidget from './components/GlobalMessengerWidget';
@@ -150,6 +154,9 @@ export default function App() {
               <Route path="/org-admin" element={<ProtectedRoute><Layout><OrgAdminDashboard /></Layout></ProtectedRoute>} />
               <Route path="/admin/user/:id/edit" element={<AdminRoute><Layout><EditProfile /></Layout></AdminRoute>} />
               <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
+              <Route path="/flashcards" element={<ProtectedRoute><Layout><Flashcards /></Layout></ProtectedRoute>} />
+              <Route path="/analytics" element={<ProtectedRoute><Layout><Analytics /></Layout></ProtectedRoute>} />
+              <Route path="/live" element={<ProtectedRoute><Layout><LiveRooms /></Layout></ProtectedRoute>} />
             </Routes>
           </BrowserRouter>
         </SocketProvider>

@@ -495,4 +495,81 @@ const getNearbyUsers = async (req, res) => {
 };
 
 
-module.exports = { getProfile, updateProfile, searchUsers, getMatches, skipMatch, sendRequest, acceptRequest, rejectRequest, getConnections, disconnectUser, submitFeedback, getPublicSubjects, getSupportAdmin, logStudy, getLeaderboard, getQuickPeek, syncGithub, updateLocation, getNearbyUsers, getMyProfile };
+
+const getMyAnalytics = async (req, res) => {
+  try {
+    const Session = require('../models/Session');
+    const StudyMetric = require('../models/StudyMetric');
+
+    const userId = req.user._id;
+    const user = await User.findById(userId).select('connections streak badges xp level activityLog totalStudyHours studyHours subjects');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Last 30 days date range
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    // Last 8 weeks date range
+    const eightWeeksAgo = new Date();
+    eightWeeksAgo.setDate(eightWeeksAgo.getDate() - 56);
+
+    // Sessions completed (participated or hosted) per week for last 8 weeks
+    const allMySessions = await Session.find({
+      $or: [{ host: userId }, { participants: userId }],
+      createdAt: { $gte: eightWeeksAgo }
+    }).select('scheduledAt subject status');
+
+    // Group sessions by ISO week
+    const weekMap = {};
+    for (let i = 7; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - (i * 7));
+      const weekLabel = `W${Math.ceil(d.getDate() / 7)} ${d.toLocaleString('default', { month: 'short' })}`;
+      weekMap[weekLabel] = { week: weekLabel, sessions: 0 };
+    }
+    allMySessions.forEach(s => {
+      const d = new Date(s.scheduledAt);
+      const weekLabel = `W${Math.ceil(d.getDate() / 7)} ${d.toLocaleString('default', { month: 'short' })}`;
+      if (weekMap[weekLabel]) weekMap[weekLabel].sessions++;
+    });
+    const sessionsByWeek = Object.values(weekMap);
+
+    // Study hours per day for last 30 days from StudyMetric
+    const metrics = await StudyMetric.find({
+      userId,
+      date: { $gte: thirtyDaysAgo }
+    }).sort({ date: 1 });
+    const hoursByDay = metrics.map(m => ({
+      date: m.date.toISOString().split('T')[0],
+      hours: parseFloat((m.hours || 0).toFixed(2))
+    }));
+
+    // Top subjects by session count
+    const subjectMap = {};
+    allMySessions.forEach(s => {
+      if (s.subject) subjectMap[s.subject] = (subjectMap[s.subject] || 0) + 1;
+    });
+    const topSubjects = Object.entries(subjectMap)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 6)
+      .map(([name, value]) => ({ name, value }));
+
+    res.json({
+      totalStudyHours: parseFloat((user.studyHours || user.totalStudyHours || 0).toFixed(1)),
+      streak: user.streak || 0,
+      badgeCount: (user.badges || []).length,
+      connectionCount: (user.connections || []).length,
+      xp: user.xp || 0,
+      level: user.level || 1,
+      sessionsByWeek,
+      hoursByDay,
+      topSubjects,
+      activityLog: (user.activityLog || []).slice(-365)
+    });
+  } catch (err) {
+    console.error('Analytics Error:', err.message);
+    res.status(500).json({ message: err.message });
+  }
+};
+
+module.exports = { getProfile, updateProfile, searchUsers, getMatches, skipMatch, sendRequest, acceptRequest, rejectRequest, getConnections, disconnectUser, submitFeedback, getPublicSubjects, getSupportAdmin, logStudy, getLeaderboard, getQuickPeek, syncGithub, updateLocation, getNearbyUsers, getMyProfile, getMyAnalytics };
