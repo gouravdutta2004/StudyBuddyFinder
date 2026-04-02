@@ -192,6 +192,16 @@
     .tk{width:20px;height:20px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;transition:.3s}
     .tg.on .tk{left:calc(100% - 22px)}
     .sv{background:rgba(16,185,129,0.14);color:var(--green);padding:.15rem .5rem;border-radius:var(--r-full);font-size:.68rem;font-weight:700}
+    /* VIDEO SECTION */
+    .vframe{max-width:960px;margin:0 auto;background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.015));border:1.5px solid rgba(124,58,237,0.2);border-radius:var(--r-3xl);overflow:hidden;box-shadow:var(--shadow),var(--glow-p),inset 0 1px 0 rgba(255,255,255,0.05);transform:rotateX(3deg);transform-style:preserve-3d;transition:transform .55s var(--spring);position:relative}
+    .vframe::before{content:'';position:absolute;inset:-3px;border-radius:calc(var(--r-3xl) + 3px);background:var(--grad-border);z-index:-1;opacity:.5}
+    .vframe:hover{transform:rotateX(0) translateY(-8px);box-shadow:var(--shadow),0 0 100px rgba(124,58,237,0.25)}
+    .vbar{display:flex;align-items:center;gap:7px;padding:13px 18px;background:rgba(0,0,0,0.3);border-bottom:1px solid var(--border)}
+    .vwrap{position:relative;aspect-ratio:16/9;overflow:hidden;background:#060810}
+    .vwrap video{width:100%;height:100%;display:block;object-fit:cover}
+    .vchips{position:absolute;left:16px;bottom:16px;display:flex;gap:8px;flex-wrap:wrap}
+    .vchip{padding:5px 12px;background:rgba(6,8,16,.78);border:1px solid rgba(255,255,255,.1);color:var(--text);border-radius:var(--r-full);font-size:.72rem;backdrop-filter:blur(10px)}
+    .vgrad{position:absolute;bottom:0;left:0;right:0;height:60px;background:linear-gradient(transparent,rgba(6,8,16,0.5));pointer-events:none}
     /* CTA */
     .cta{padding:7rem 0;text-align:center;position:relative}
     .cta::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 80%,rgba(16,185,129,0.08),transparent 60%);pointer-events:none}
@@ -303,6 +313,37 @@
                 <div class="stat-val cnt" data-t="98">0</div>
                 <div class="stat-lbl">Match Rate %</div>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- VIDEO DEMO -->
+  <section class="s" id="watch" style="padding-top:0">
+    <div class="w">
+      <div class="sh" data-aos="fade-up" style="margin-bottom:2.5rem">
+        <div class="sbadge"><span class="dot"></span>Product Demo</div>
+        <h2 class="h2">See StudyFriend <span class="gt">in action</span></h2>
+        <p class="p">Watch how students find perfect study partners and join live collaborative sessions.</p>
+      </div>
+      <div style="perspective:1200px" data-aos="fade-up" data-aos-delay="140">
+        <div class="vframe tilt">
+          <div class="vbar">
+            <div class="bdot r"></div><div class="bdot y"></div><div class="bdot g"></div>
+            <div class="burl">studyfriend.app — Live Product Demo</div>
+            <div class="blive">● Recording</div>
+          </div>
+          <div class="vwrap">
+            <video autoplay muted loop playsinline preload="metadata">
+              <source src="/studyfriend-demo.mp4" type="video/mp4" />
+            </video>
+            <div class="vgrad"></div>
+            <div class="vchips">
+              <span class="vchip">Algorithmic Match</span>
+              <span class="vchip">Live Hubs</span>
+              <span class="vchip">Velocity XP</span>
             </div>
           </div>
         </div>
