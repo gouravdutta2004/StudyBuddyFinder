@@ -37,6 +37,13 @@ export default function AIAssistantWidget() {
     return () => window.removeEventListener('open-ai-widget', handler);
   }, []);
 
+  // Close on Escape key
+  useEffect(() => {
+    const handleKey = (e) => { if (e.key === 'Escape') setIsOpen(false); };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, []);
+
   const handleSend = async () => {
     if (!input.trim()) return;
     
@@ -72,6 +79,15 @@ export default function AIAssistantWidget() {
     <>
       <AnimatePresence>
         {isOpen && (
+          <>
+            {/* Click-outside backdrop */}
+            <Box
+              onClick={() => setIsOpen(false)}
+              sx={{
+                position: 'fixed', inset: 0, zIndex: 9998,
+                bgcolor: 'transparent',
+              }}
+            />
           <Box
             component={motion.div}
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
@@ -241,6 +257,7 @@ export default function AIAssistantWidget() {
               />
             </Box>
           </Box>
+          </>
         )}
       </AnimatePresence>
 

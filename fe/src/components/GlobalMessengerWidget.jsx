@@ -49,6 +49,13 @@ export default function GlobalMessengerWidget() {
     return () => window.removeEventListener('open-messenger-widget', handler);
   }, []);
 
+  // Close on Escape key
+  useEffect(() => {
+    const handleKey = (e) => { if (e.key === 'Escape') setOpen(false); };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, []);
+
   // Broadcast unread count to Navbar
   useEffect(() => {
     window.dispatchEvent(new CustomEvent('messenger-unread-update', { detail: { count: unreadTotal } }));
@@ -223,28 +230,49 @@ export default function GlobalMessengerWidget() {
 
       <AnimatePresence>
         {open && (
-          <Box
-            component={motion.div}
-            initial={{ opacity: 0, y: 50, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 50, scale: 0.95, transition: { duration: 0.2 } }}
-            transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            sx={{
-              position: 'fixed', bottom: 100, right: 24, width: 380, height: 600, 
-              maxHeight: 'calc(100vh - 120px)', zIndex: 9998,
-              bgcolor: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(24px)',
-              borderRadius: '24px', border: '1px solid rgba(255,255,255,0.1)',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.5)', overflow: 'hidden',
-              display: 'flex', flexDirection: 'column'
-            }}
-          >
+          <>
+            {/* Click-outside backdrop */}
+            <Box
+              onClick={() => { setActiveUser(null); setOpen(false); }}
+              sx={{ position: 'fixed', inset: 0, zIndex: 9997, bgcolor: 'transparent' }}
+            />
+            <Box
+              component={motion.div}
+              initial={{ opacity: 0, y: 50, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 50, scale: 0.95, transition: { duration: 0.2 } }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              sx={{
+                position: 'fixed', bottom: 100, right: 24, width: 380, height: 600,
+                maxHeight: 'calc(100vh - 120px)', zIndex: 9999,
+                bgcolor: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(24px)',
+                borderRadius: '24px', border: '1px solid rgba(255,255,255,0.1)',
+                boxShadow: '0 20px 60px rgba(0,0,0,0.5)', overflow: 'hidden',
+                display: 'flex', flexDirection: 'column'
+              }}
+            >
             {!activeUser ? (
               // INBOX VIEW
               <>
                 <Box sx={{ p: 2.5, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                  <Typography variant="h6" fontWeight={900} color="white" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                    <MessageCircle size={20} color="#38bdf8" /> Messenger
-                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                    <Typography variant="h6" fontWeight={900} color="white" sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                      <MessageCircle size={20} color="#38bdf8" /> Messenger
+                    </Typography>
+                    <IconButton
+                      size="small"
+                      onClick={() => setOpen(false)}
+                      sx={{
+                        color: 'rgba(255,255,255,0.5)',
+                        bgcolor: 'rgba(255,255,255,0.06)',
+                        borderRadius: '10px',
+                        width: 32, height: 32,
+                        '&:hover': { bgcolor: 'rgba(255,255,255,0.12)', color: 'white' },
+                      }}
+                    >
+                      <X size={16} />
+                    </IconButton>
+                  </Box>
                   <TextField
                     fullWidth placeholder="Search connections..." value={searchFilter} onChange={(e) => setSearchFilter(e.target.value)} size="small"
                     InputProps={{
@@ -283,12 +311,27 @@ export default function GlobalMessengerWidget() {
               // ACTIVE CHAT VIEW
               <>
                 <Box sx={{ p: 2, borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: 1.5, bgcolor: 'rgba(255,255,255,0.02)' }}>
-                  <IconButton size="small" onClick={() => setActiveUser(null)} sx={{ color: 'white' }}><ArrowLeft size={18} /></IconButton>
+                  <IconButton size="small" onClick={() => setActiveUser(null)} sx={{ color: 'rgba(255,255,255,0.6)', '&:hover': { color: 'white' } }}>
+                    <ArrowLeft size={18} />
+                  </IconButton>
                   <Avatar src={activeUser.avatar} sx={{ width: 36, height: 36 }}>{activeUser.name.charAt(0)}</Avatar>
                   <Box sx={{ flexGrow: 1, minWidth: 0 }}>
                     <Typography variant="subtitle2" fontWeight={800} color="white" noWrap>{activeUser.name}</Typography>
                     <Typography variant="caption" color="rgba(255,255,255,0.5)" noWrap>{activeUser.university || 'Active'}</Typography>
                   </Box>
+                  <IconButton
+                    size="small"
+                    onClick={() => { setActiveUser(null); setOpen(false); }}
+                    sx={{
+                      color: 'rgba(255,255,255,0.5)',
+                      bgcolor: 'rgba(255,255,255,0.06)',
+                      borderRadius: '10px',
+                      width: 32, height: 32,
+                      '&:hover': { bgcolor: 'rgba(255,255,255,0.12)', color: 'white' },
+                    }}
+                  >
+                    <X size={16} />
+                  </IconButton>
                 </Box>
 
                 <Box sx={{ flexGrow: 1, overflowY: 'auto', p: 2, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
@@ -347,6 +390,7 @@ export default function GlobalMessengerWidget() {
               </>
             )}
           </Box>
+          </>
         )}
       </AnimatePresence>
     </>
