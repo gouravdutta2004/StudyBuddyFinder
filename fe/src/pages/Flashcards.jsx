@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import api from '../api/axios';
 import {
   Box, Typography, TextField, Button, CircularProgress,
@@ -7,7 +7,8 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   BrainCircuit, Shuffle, RotateCcw, ChevronLeft, ChevronRight,
-  CheckCircle, XCircle, Zap, ClipboardList, Wifi, WifiOff, Sparkles
+  CheckCircle, XCircle, Zap, ClipboardList, Wifi, WifiOff, Sparkles,
+  Star, Keyboard, BarChart2, Award
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -164,20 +165,54 @@ function localGenQuiz(topic, count) {
   return shuffled.slice(0, Math.min(count, shuffled.length));
 }
 
+// ─── Confidence Rater ────────────────────────────────────────────────────────
+function ConfidenceRater({ onRate, rated }) {
+  const [hover, setHover] = useState(0);
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 2 }}>
+      <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, color: 'rgba(255,255,255,0.5)', mr: 1 }}>HOW WELL DID YOU KNOW IT?</Typography>
+      {[1, 2, 3, 4, 5].map(n => (
+        <Box key={n}
+          onMouseEnter={() => setHover(n)}
+          onMouseLeave={() => setHover(0)}
+          onClick={() => !rated && onRate(n)}
+          component={motion.div}
+          whileHover={{ scale: 1.3 }}
+          sx={{ cursor: rated ? 'default' : 'pointer' }}
+        >
+          <Star
+            size={20}
+            color={(hover >= n || rated >= n) ? '#f59e0b' : 'rgba(255,255,255,0.25)'}
+            fill={(hover >= n || rated >= n) ? '#f59e0b' : 'none'}
+          />
+        </Box>
+      ))}
+      {rated > 0 && (
+        <Typography sx={{ fontSize: '0.62rem', color: '#f59e0b', fontWeight: 700, ml: 1 }}>
+          {rated === 1 ? 'Again' : rated === 2 ? 'Hard' : rated === 3 ? 'Good' : rated === 4 ? 'Easy' : 'Perfect'}
+        </Typography>
+      )}
+    </Box>
+  );
+}
+
 // ─── FlipCard Component ────────────────────────────────────────────────────────
-function FlipCard({ card, index, total }) {
+function FlipCard({ card, index, total, onRate, rated }) {
   const [flipped, setFlipped] = useState(false);
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
+
+  // Reset flip when card changes
+  useEffect(() => { setFlipped(false); }, [index]);
 
   return (
     <Box sx={{ perspective: '1200px', width: '100%', maxWidth: 580, mx: 'auto', userSelect: 'none' }}>
       <Box
         onClick={() => setFlipped(f => !f)}
         sx={{
-          position: 'relative', width: '100%', height: 340,
+          position: 'relative', width: '100%', height: flipped && card ? 380 : 300,
           transformStyle: 'preserve-3d',
-          transition: 'transform 0.55s cubic-bezier(0.4, 0, 0.2, 1)',
+          transition: 'transform 0.55s cubic-bezier(0.4, 0, 0.2, 1), height 0.3s ease',
           transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
           cursor: 'pointer',
         }}
@@ -194,23 +229,17 @@ function FlipCard({ card, index, total }) {
           boxShadow: isDark ? '0 24px 64px rgba(0,0,0,0.6)' : '0 24px 64px rgba(99,102,241,0.18)',
         }}>
           <Typography sx={{ fontFamily: 'monospace', fontSize: '0.6rem', color: '#6366f1', fontWeight: 800, letterSpacing: 3, mb: 2 }}>
-            CARD {index + 1} / {total} · CLICK TO REVEAL
+            CARD {index + 1} / {total} · SPACE TO FLIP
           </Typography>
           <Chip
-            label={card.difficulty?.toUpperCase() || 'MIXED'}
-            size="small"
-            sx={{
-              bgcolor: (DIFF_COLORS[card.difficulty] || '#6366f1') + '22',
-              color: DIFF_COLORS[card.difficulty] || '#6366f1',
-              fontWeight: 800, fontFamily: 'monospace', mb: 3,
-              border: `1px solid ${(DIFF_COLORS[card.difficulty] || '#6366f1')}44`,
-            }}
+            label={card.difficulty?.toUpperCase() || 'MIXED'} size="small"
+            sx={{ bgcolor: (DIFF_COLORS[card.difficulty] || '#6366f1') + '22', color: DIFF_COLORS[card.difficulty] || '#6366f1', fontWeight: 800, fontFamily: 'monospace', mb: 3, border: `1px solid ${(DIFF_COLORS[card.difficulty] || '#6366f1')}44` }}
           />
           <Typography sx={{ fontSize: '1.1rem', fontWeight: 700, lineHeight: 1.6, color: isDark ? 'white' : '#0f172a' }}>
             {card.question}
           </Typography>
           <Typography sx={{ mt: 2.5, fontSize: '0.72rem', color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)', fontFamily: 'monospace' }}>
-            ↕ tap to flip
+            ↕ Space or click to flip
           </Typography>
         </Box>
 
@@ -226,12 +255,11 @@ function FlipCard({ card, index, total }) {
           border: `2px solid ${isDark ? 'rgba(16,185,129,0.45)' : 'rgba(16,185,129,0.35)'}`,
           boxShadow: isDark ? '0 24px 64px rgba(0,0,0,0.6)' : '0 24px 64px rgba(16,185,129,0.18)',
         }}>
-          <Typography sx={{ fontFamily: 'monospace', fontSize: '0.6rem', color: '#10b981', fontWeight: 800, letterSpacing: 3, mb: 2 }}>
-            ANSWER
-          </Typography>
+          <Typography sx={{ fontFamily: 'monospace', fontSize: '0.6rem', color: '#10b981', fontWeight: 800, letterSpacing: 3, mb: 2 }}>ANSWER</Typography>
           <Typography sx={{ fontSize: '1rem', fontWeight: 600, lineHeight: 1.7, color: isDark ? '#d1fae5' : '#064e3b' }}>
             {card.answer}
           </Typography>
+          <ConfidenceRater onRate={onRate} rated={rated} />
         </Box>
       </Box>
     </Box>
@@ -357,12 +385,49 @@ export default function Flashcards() {
   const [quiz, setQuiz] = useState([]);
   const [currentCard, setCurrentCard] = useState(0);
   const [generated, setGenerated] = useState(false);
-  const [source, setSource] = useState('ai'); // 'ai' | 'local'
+  const [source, setSource] = useState('ai');
+  // Study session tracking
+  const [confidenceRatings, setConfidenceRatings] = useState({}); // cardIndex -> rating
+  const [sessionComplete, setSessionComplete] = useState(false);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    if (!generated || mode !== 'flashcards' || sessionComplete) return;
+    const handleKey = (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.code === 'ArrowRight') setCurrentCard(c => Math.min(flashcards.length - 1, c + 1));
+      if (e.code === 'ArrowLeft') setCurrentCard(c => Math.max(0, c - 1));
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [generated, mode, flashcards.length, sessionComplete]);
+
+  const handleConfidenceRate = (rating) => {
+    const next = { ...confidenceRatings, [currentCard]: rating };
+    setConfidenceRatings(next);
+    // Auto-advance after rating
+    setTimeout(() => {
+      if (currentCard < flashcards.length - 1) {
+        setCurrentCard(c => c + 1);
+      } else {
+        setSessionComplete(true);
+      }
+    }, 600);
+  };
+
+  const avgConfidence = Object.values(confidenceRatings).length > 0
+    ? (Object.values(confidenceRatings).reduce((a, b) => a + b, 0) / Object.values(confidenceRatings).length).toFixed(1)
+    : null;
+  const reviewedCount = Object.keys(confidenceRatings).length;
+  const hardCards = Object.entries(confidenceRatings).filter(([, v]) => v <= 2).map(([k]) => flashcards[+k]).filter(Boolean);
+
 
   const generate = useCallback(async () => {
     if (!topic.trim()) return toast.error('Please enter a topic first');
     setLoading(true);
     setGenerated(false);
+    setConfidenceRatings({});
+    setSessionComplete(false);
 
     try {
       if (mode === 'flashcards') {
@@ -545,9 +610,63 @@ export default function Flashcards() {
               {/* Flashcards Display */}
               {mode === 'flashcards' && flashcards.length > 0 && (
                 <Box>
+                  {/* Study Stats Bar */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3, p: 2, borderRadius: '12px', bgcolor: card, border: `1px solid ${border}` }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                      <BarChart2 size={14} color="#6366f1" />
+                      <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: 'text.secondary', fontFamily: 'monospace' }}>
+                        {reviewedCount}/{flashcards.length} REVIEWED
+                      </Typography>
+                    </Box>
+                    {avgConfidence && (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                        <Star size={14} color="#f59e0b" fill="#f59e0b" />
+                        <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: '#f59e0b', fontFamily: 'monospace' }}>
+                          {avgConfidence} AVG CONFIDENCE
+                        </Typography>
+                      </Box>
+                    )}
+                    <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Keyboard size={13} color="rgba(156,163,175,0.6)" />
+                      <Typography sx={{ fontSize: '0.65rem', color: 'text.disabled', fontFamily: 'monospace' }}>← → NAVIGATE · SPACE FLIP</Typography>
+                    </Box>
+                  </Box>
+
+                  {/* Session complete card */}
+                  <AnimatePresence>
+                    {sessionComplete && (
+                      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                        <Box sx={{ p: 3.5, borderRadius: '20px', mb: 3, bgcolor: card, border: `1px solid ${border}`, textAlign: 'center' }}>
+                          <Award size={40} color="#f59e0b" style={{ margin: '0 auto 12px' }} />
+                          <Typography sx={{ fontWeight: 900, fontSize: '1.3rem', color: isDark ? 'white' : '#0f172a', mb: 0.5 }}>Session Complete!</Typography>
+                          <Typography sx={{ fontSize: '0.85rem', color: 'text.secondary', mb: 2 }}>
+                            You reviewed {reviewedCount} cards · Avg confidence: {avgConfidence} / 5
+                          </Typography>
+                          {hardCards.length > 0 && (
+                            <Box sx={{ mb: 2, p: 2, borderRadius: '12px', bgcolor: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', textAlign: 'left' }}>
+                              <Typography sx={{ fontSize: '0.72rem', fontWeight: 800, color: '#ef4444', fontFamily: 'monospace', mb: 1 }}>NEEDS REVIEW ({hardCards.length})</Typography>
+                              {hardCards.slice(0, 3).map((c, i) => (
+                                <Typography key={i} sx={{ fontSize: '0.8rem', color: 'text.secondary', mb: 0.5 }}>• {c.question}</Typography>
+                              ))}
+                            </Box>
+                          )}
+                          <Button onClick={() => { setCurrentCard(0); setConfidenceRatings({}); setSessionComplete(false); }}
+                            variant="contained" startIcon={<RotateCcw size={15} />}
+                            sx={{ bgcolor: '#6366f1', borderRadius: '10px', fontWeight: 700, textTransform: 'none', mr: 1 }}>
+                            Study Again
+                          </Button>
+                          <Button onClick={shuffle} variant="outlined"
+                            sx={{ borderRadius: '10px', fontWeight: 700, textTransform: 'none', borderColor: 'rgba(99,102,241,0.3)', color: '#818cf8' }}>
+                            Shuffle & Retry
+                          </Button>
+                        </Box>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                     <Typography sx={{ fontFamily: 'monospace', fontWeight: 800, color: 'text.secondary', fontSize: '0.72rem' }}>
-                      {flashcards.length} CARDS · CLICK TO FLIP
+                      {flashcards.length} CARDS · SPACE TO FLIP
                     </Typography>
                     <Tooltip title="Shuffle Deck">
                       <Box component={motion.div} whileHover={{ rotate: 180 }} transition={{ duration: 0.3 }} onClick={shuffle}
@@ -559,7 +678,13 @@ export default function Flashcards() {
 
                   <AnimatePresence mode="wait">
                     <motion.div key={currentCard} initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} transition={{ duration: 0.22 }}>
-                      <FlipCard card={flashcards[currentCard]} index={currentCard} total={flashcards.length} />
+                      <FlipCard
+                        card={flashcards[currentCard]}
+                        index={currentCard}
+                        total={flashcards.length}
+                        onRate={handleConfidenceRate}
+                        rated={confidenceRatings[currentCard] || 0}
+                      />
                     </motion.div>
                   </AnimatePresence>
 

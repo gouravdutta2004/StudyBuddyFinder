@@ -6,7 +6,8 @@ import {
   User, MapPin, GraduationCap, BookOpen, MessageCircle, UserPlus,
   Pencil, UserMinus, Trophy, Flame, Clock, Star, Github, Linkedin,
   Instagram, BadgeCheck, Globe, Target, Zap, Shield, Award,
-  TrendingUp, Brain, Heart, Users, ChevronRight, Download
+  TrendingUp, Brain, Heart, Users, ChevronRight, Download,
+  Twitter, Youtube, Facebook, ExternalLink
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ActivityHeatmap from '../components/profile/ActivityHeatmap';
@@ -105,6 +106,93 @@ function BadgeCard({ name, earned }) {
         </Box>
       </Box>
     </Tooltip>
+  );
+}
+
+/* ─── Social Accounts Grid ─── */
+const SOCIAL_PLATFORMS = [
+  { key: 'linkedin',  label: 'LinkedIn',  Icon: Linkedin,  color: '#0a66c2', bg: 'rgba(10,102,194,0.1)',   href: (v) => `https://linkedin.com/in/${v}` },
+  { key: 'github',    label: 'GitHub',    Icon: Github,    color: '#e5e7eb', bg: 'rgba(255,255,255,0.07)', href: (v) => `https://github.com/${v}` },
+  { key: 'twitter',   label: 'X (Twitter)', Icon: Twitter, color: '#1da1f2', bg: 'rgba(29,161,242,0.1)',  href: (v) => `https://x.com/${v}` },
+  { key: 'instagram', label: 'Instagram', Icon: Instagram, color: '#e1306c', bg: 'rgba(225,48,108,0.1)',  href: (v) => `https://instagram.com/${v}` },
+  { key: 'facebook',  label: 'Facebook',  Icon: Facebook,  color: '#1877f2', bg: 'rgba(24,119,242,0.1)',  href: (v) => `https://facebook.com/${v}` },
+  { key: 'youtube',   label: 'YouTube',   Icon: Youtube,   color: '#ff0000', bg: 'rgba(255,0,0,0.1)',     href: (v) => `https://youtube.com/@${v}` },
+];
+
+function SocialAccountsGrid({ socialLinks = {}, isDark }) {
+  const hasSocials = SOCIAL_PLATFORMS.some(p => socialLinks[p.key]);
+  return (
+    <Box sx={{
+      borderRadius: '18px', p: 3,
+      bgcolor: isDark ? '#0d1117' : '#fff',
+      border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)',
+      boxShadow: isDark ? '0 1px 8px rgba(0,0,0,0.3)' : '0 1px 4px rgba(0,0,0,0.05)',
+    }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2.5 }}>
+        <Box>
+          <Typography sx={{ fontFamily: 'monospace', fontSize: '0.6rem', fontWeight: 800, color: '#6366f1', letterSpacing: 2, mb: 0.5 }}>▸ SOCIAL / ACCOUNTS</Typography>
+          <Typography sx={{ fontWeight: 800, fontSize: '0.95rem', color: isDark ? 'white' : '#0f172a' }}>Online Presence</Typography>
+        </Box>
+        {hasSocials && (
+          <Box sx={{ px: 1.25, py: 0.4, borderRadius: '8px', bgcolor: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.25)' }}>
+            <Typography sx={{ fontSize: '0.62rem', fontWeight: 800, color: '#22c55e', fontFamily: 'monospace' }}>
+              {SOCIAL_PLATFORMS.filter(p => socialLinks[p.key]).length} CONNECTED
+            </Typography>
+          </Box>
+        )}
+      </Box>
+
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1.25 }}>
+        {SOCIAL_PLATFORMS.map(({ key, label, Icon, color, bg, href }) => {
+          const isConnected = Boolean(socialLinks[key]);
+          const url = isConnected ? href(socialLinks[key]) : null;
+          return (
+            <Box
+              key={key}
+              component={isConnected ? 'a' : 'div'}
+              href={url || undefined}
+              target={isConnected ? '_blank' : undefined}
+              rel="noopener noreferrer"
+              sx={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1,
+                p: 2, borderRadius: '14px', textDecoration: 'none',
+                bgcolor: isConnected ? bg : (isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)'),
+                border: '1px solid',
+                borderColor: isConnected ? color + '33' : (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'),
+                opacity: isConnected ? 1 : 0.45,
+                cursor: isConnected ? 'pointer' : 'default',
+                position: 'relative',
+                transition: 'all 0.2s',
+                '&:hover': isConnected ? {
+                  transform: 'translateY(-3px)',
+                  boxShadow: `0 6px 20px ${color}22`,
+                  borderColor: color + '55',
+                } : {},
+              }}
+            >
+              {/* Connected green dot */}
+              {isConnected && (
+                <Box sx={{
+                  position: 'absolute', top: 10, right: 10,
+                  width: 8, height: 8, borderRadius: '50%', bgcolor: '#22c55e',
+                  boxShadow: '0 0 6px rgba(34,197,94,0.7)',
+                }} />
+              )}
+
+              <Icon size={24} color={isConnected ? color : (isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.25)')} />
+              <Typography sx={{ fontSize: '0.68rem', fontWeight: 700, color: isConnected ? (isDark ? 'white' : '#0f172a') : 'text.disabled', lineHeight: 1 }}>
+                {label}
+              </Typography>
+              <Typography sx={{ fontSize: '0.6rem', color: isConnected ? color : 'text.disabled', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                {isConnected ? (
+                  <><ExternalLink size={9} />@{socialLinks[key].slice(0, 12)}{socialLinks[key].length > 12 ? '…' : ''}</>
+                ) : 'Not connected'}
+              </Typography>
+            </Box>
+          );
+        })}
+      </Box>
+    </Box>
   );
 }
 
@@ -476,6 +564,11 @@ export default function UserProfile() {
                 <Typography sx={{ fontFamily: 'monospace', fontSize: '0.6rem', fontWeight: 800, color: '#22c55e', letterSpacing: 2, mb: 2 }}>▸ ACTIVITY / CONTRIBUTION MAP</Typography>
                 <ActivityHeatmap userId={targetId} />
               </Box>
+            </motion.div>
+
+            {/* Social Accounts Grid */}
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+              <SocialAccountsGrid socialLinks={profile.socialLinks || {}} isDark={isDark} />
             </motion.div>
           </Box>
 

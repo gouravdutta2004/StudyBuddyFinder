@@ -127,93 +127,103 @@ function XPRing({ pct, tier }) {
   );
 }
 
-/* ─── Quest Card ─── */
-function QuestCard({ quest, index, onComplete, isDark }) {
-  const [hovering, setHovering] = useState(false);
+/* ─── Quest State Logic ───
+   state: 'done' | 'inprogress' | 'auto'
+   - done:       isCompleted === true
+   - inprogress: progress > 0 && !isCompleted
+   - auto:       progress === 0 && !isCompleted (will auto-trigger on action)
+─────────────────────────── */
+function QuestCard({ quest, index, isDark }) {
+  const state = quest.isCompleted ? 'done'
+              : (quest.progress > 0 ? 'inprogress' : 'auto');
+
+  const progress = Math.min(quest.progress || 0, 100);
+
+  const STATE = {
+    done:       { color: '#22c55e', bg: 'rgba(34,197,94,0.07)',  border: 'rgba(34,197,94,0.28)',  leftBar: '#22c55e',  label: 'Completed',    labelColor: '#22c55e'  },
+    inprogress: { color: '#f59e0b', bg: 'rgba(245,158,11,0.07)', border: 'rgba(245,158,11,0.28)', leftBar: '#f59e0b',  label: 'In Progress',  labelColor: '#f59e0b'  },
+    auto:       { color: '#a78bfa', bg: 'rgba(167,139,250,0.06)', border: 'rgba(167,139,250,0.22)', leftBar: '#a78bfa', label: 'Auto',         labelColor: '#a78bfa'  },
+  }[state];
+
+  const BADGE_STATE = {
+    done:       { text: 'DONE',        bg: 'rgba(34,197,94,0.12)',   color: '#22c55e',  border: 'rgba(34,197,94,0.25)'   },
+    inprogress: { text: 'IN PROGRESS', bg: 'rgba(245,158,11,0.12)',  color: '#f59e0b',  border: 'rgba(245,158,11,0.25)'  },
+    auto:       { text: 'AUTO',        bg: 'rgba(167,139,250,0.12)', color: '#a78bfa',  border: 'rgba(167,139,250,0.25)' },
+  }[state];
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: -32 }}
+      initial={{ opacity: 0, x: -24 }}
       animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, scale: 0.95, x: 20 }}
-      transition={{ delay: index * 0.07, type: 'spring', stiffness: 280, damping: 28 }}
-      whileHover={quest.isCompleted ? {} : { x: 6 }}
-      onHoverStart={() => setHovering(true)}
-      onHoverEnd={() => setHovering(false)}
+      exit={{ opacity: 0, scale: 0.96 }}
+      transition={{ delay: index * 0.06, type: 'spring', stiffness: 300, damping: 28 }}
     >
-      <Box
-        onClick={() => onComplete(quest._id, quest.isCompleted)}
-        sx={{
-          position: 'relative', overflow: 'hidden',
-          cursor: quest.isCompleted ? 'default' : 'pointer',
-          px: 3, py: 2.5,
-          bgcolor: quest.isCompleted
-            ? 'rgba(34,197,94,0.06)'
-            : (isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)'),
-          border: '1px solid',
-          borderColor: quest.isCompleted
-            ? 'rgba(34,197,94,0.25)'
-            : (hovering ? 'rgba(99,102,241,0.4)' : (isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)')),
-          borderRadius: '2px 16px 16px 2px',
-          borderLeft: `3px solid ${quest.isCompleted ? '#22c55e' : '#6366f1'}`,
-          transition: 'all 0.2s ease',
-          display: 'flex', alignItems: 'center', gap: 2,
-          boxShadow: hovering && !quest.isCompleted ? '0 4px 24px rgba(99,102,241,0.12), inset 0 0 24px rgba(99,102,241,0.03)' : 'none',
-        }}
-      >
-        {/* Left icon */}
-        <Box sx={{ flexShrink: 0, transition: '0.2s' }}>
-          {quest.isCompleted
-            ? <CheckCircle2 size={26} color="#22c55e" />
-            : (
-              <motion.div animate={{ rotate: hovering ? 15 : 0 }} transition={{ duration: 0.2 }}>
-                <Target size={26} color={hovering ? '#6366f1' : 'rgba(255,255,255,0.25)'} />
+      <Box sx={{
+        position: 'relative', overflow: 'hidden',
+        px: 2.5, py: 2,
+        bgcolor: STATE.bg,
+        border: '1px solid', borderColor: STATE.border,
+        borderRadius: '2px 14px 14px 2px',
+        borderLeft: `3px solid ${STATE.leftBar}`,
+        transition: 'all 0.2s ease',
+        display: 'flex', flexDirection: 'column', gap: 1,
+      }}>
+        {/* Top row */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          {/* State icon */}
+          <Box sx={{ flexShrink: 0 }}>
+            {state === 'done' && <CheckCircle2 size={22} color="#22c55e" />}
+            {state === 'inprogress' && (
+              <motion.div animate={{ scale: [1, 1.15, 1] }} transition={{ repeat: Infinity, duration: 2 }}>
+                <Target size={22} color="#f59e0b" />
               </motion.div>
-            )
-          }
+            )}
+            {state === 'auto' && (
+              <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 4, ease: 'linear' }}>
+                <Cpu size={22} color="#a78bfa" style={{ willChange: 'transform' }} />
+              </motion.div>
+            )}
+          </Box>
+
+          {/* Task text */}
+          <Box sx={{ flex: 1 }}>
+            <Typography fontWeight={700} fontSize="0.88rem"
+              color={state === 'done' ? '#22c55e' : (isDark ? 'rgba(255,255,255,0.88)' : '#1e293b')}
+              sx={{ textDecoration: state === 'done' ? 'line-through' : 'none', lineHeight: 1.35 }}>
+              {quest.task}
+            </Typography>
+            {state !== 'done' && (
+              <Typography variant="caption" color="text.disabled" fontWeight={600} fontSize="0.67rem">
+                {state === 'auto' ? '🤖 Triggers automatically when you complete the action'
+                                  : `${progress}% complete — keep going!`}
+              </Typography>
+            )}
+          </Box>
+
+          {/* State badge */}
+          <Box sx={{ px: 1.25, py: 0.35, borderRadius: '7px', bgcolor: BADGE_STATE.bg, border: `1px solid ${BADGE_STATE.border}`, flexShrink: 0 }}>
+            <Typography sx={{ fontSize: '0.6rem', fontWeight: 900, color: BADGE_STATE.color, letterSpacing: 1 }}>
+              {BADGE_STATE.text}
+            </Typography>
+          </Box>
         </Box>
 
-        {/* Text */}
-        <Box sx={{ flex: 1 }}>
-          <Typography fontWeight={700} fontSize="0.92rem"
-            color={quest.isCompleted ? '#22c55e' : (isDark ? 'rgba(255,255,255,0.9)' : '#1e293b')}
-            sx={{ textDecoration: quest.isCompleted ? 'line-through' : 'none', mb: 0.25, letterSpacing: 0.2 }}>
-            {quest.task}
-          </Typography>
-          <Typography variant="caption" fontWeight={600}
-            color={quest.isCompleted ? 'rgba(34,197,94,0.7)' : 'text.secondary'}>
-            {quest.isCompleted ? '✓ MISSION COMPLETE' : '→ CLICK TO CLAIM'}
-          </Typography>
-        </Box>
-
-        {/* XP pill */}
-        {!quest.isCompleted && (
-          <motion.div animate={{ scale: hovering ? 1.1 : 1 }}>
-            <Box sx={{
-              px: 1.5, py: 0.4, borderRadius: '6px',
-              background: 'linear-gradient(135deg,rgba(99,102,241,0.2),rgba(139,92,246,0.2))',
-              border: '1px solid rgba(99,102,241,0.3)',
-              color: '#818cf8', fontWeight: 900, fontSize: '0.7rem', letterSpacing: 1,
-            }}>
-              +XP
+        {/* Progress bar — only for inprogress */}
+        {state === 'inprogress' && (
+          <Box sx={{ pl: 4.5 }}>
+            <Box sx={{ height: 5, borderRadius: '3px', bgcolor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)', overflow: 'hidden' }}>
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 1.2, ease: 'easeOut', delay: index * 0.06 + 0.2 }}
+                style={{ height: '100%', background: 'linear-gradient(90deg,#f59e0b,#fbbf24)', borderRadius: 3 }}
+              />
             </Box>
-          </motion.div>
+            <Typography variant="caption" color="text.disabled" fontSize="0.62rem" fontFamily="monospace" fontWeight={700}>
+              {progress}% — {quest.target ? `${Math.round((progress / 100) * quest.target)}/${quest.target}` : 'In progress'}
+            </Typography>
+          </Box>
         )}
-
-        {/* Scan line hover effect */}
-        <AnimatePresence>
-          {hovering && !quest.isCompleted && (
-            <motion.div
-              initial={{ x: '-100%' }} animate={{ x: '200%' }} exit={{ x: '200%' }}
-              transition={{ duration: 0.5 }}
-              style={{
-                position: 'absolute', top: 0, left: 0, width: '60%', height: '100%',
-                background: 'linear-gradient(90deg,transparent,rgba(99,102,241,0.06),transparent)',
-                pointerEvents: 'none',
-              }}
-            />
-          )}
-        </AnimatePresence>
       </Box>
     </motion.div>
   );
@@ -270,16 +280,13 @@ export default function Gamification() {
     finally { setLoading(false); }
   };
 
-  const handleComplete = async (id, done) => {
-    if (done) return;
-    try {
-      await api.put(`/gamification/quests/${id}`);
-      setQuests(p => p.map(q => q._id === id ? { ...q, isCompleted: true } : q));
-      confetti({ particleCount: 140, spread: 90, origin: { y: 0.5 }, colors: ['#6366f1', '#a78bfa', '#38bdf8', '#fbbf24'] });
-      toast.success('MISSION COMPLETE — XP EARNED', { icon: '🎯', style: { fontWeight: 800, letterSpacing: 1 } });
-      api.get('/users/profile').then(r => setProfile(r.data));
-    } catch { toast.error('Mission failed.'); }
-  };
+  // Quests auto-complete via backend events; we just poll every 60s to refresh
+  useEffect(() => {
+    const interval = setInterval(() => {
+      api.get('/gamification/quests').then(r => setQuests(r.data)).catch(() => {});
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   if (loading || !profile) {
     return (
@@ -633,17 +640,30 @@ export default function Gamification() {
                 </Box>
               </Box>
 
+              {/* Quest legend */}
+              <Box sx={{ display: 'flex', gap: 1.5, mb: 2, flexWrap: 'wrap' }}>
+                {[
+                  { label: 'Auto', color: '#a78bfa', bg: 'rgba(167,139,250,0.1)', desc: 'Triggers automatically' },
+                  { label: 'In Progress', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', desc: 'Action detected' },
+                  { label: 'Done', color: '#22c55e', bg: 'rgba(34,197,94,0.1)', desc: 'Completed' },
+                ].map(s => (
+                  <Box key={s.label} sx={{ display: 'flex', alignItems: 'center', gap: 0.75, px: 1.25, py: 0.5, borderRadius: '8px', bgcolor: s.bg }}>
+                    <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: s.color, boxShadow: `0 0 6px ${s.color}` }} />
+                    <Typography variant="caption" fontWeight={800} color={s.color} fontSize="0.65rem" letterSpacing={0.5}>{s.label}</Typography>
+                  </Box>
+                ))}
+              </Box>
               {/* Quest list */}
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
                 <AnimatePresence>
                   {total === 0 ? (
                     <Box sx={{ textAlign: 'center', py: 8, color: 'text.secondary' }}>
                       <Target size={44} style={{ opacity: 0.12, margin: '0 auto 12px' }} />
-                      <Typography fontWeight={700}>No missions available</Typography>
+                      <Typography fontWeight={700}>No quests available</Typography>
                       <Typography variant="caption">Check back tomorrow</Typography>
                     </Box>
                   ) : quests.map((q, i) => (
-                    <QuestCard key={q._id} quest={q} index={i} onComplete={handleComplete} isDark={isDark} />
+                    <QuestCard key={q._id} quest={q} index={i} isDark={isDark} />
                   ))}
                 </AnimatePresence>
               </Box>
