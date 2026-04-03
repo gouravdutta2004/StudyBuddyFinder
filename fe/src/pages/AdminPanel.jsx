@@ -579,7 +579,7 @@ export default function AdminPanel() {
           </Typography>
 
           {/* System pulse */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8, bgcolor: `${C.green}12`, border: `1px solid ${C.green}30`, borderRadius: '8px', px: 1.2, py: 0.5, display: { xs: 'none', sm: 'flex' } }}>
+          <Box sx={{ alignItems: 'center', gap: 0.8, bgcolor: `${C.green}12`, border: `1px solid ${C.green}30`, borderRadius: '8px', px: 1.2, py: 0.5, display: { xs: 'none', sm: 'flex' } }}>
             <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: C.green, animation: 'pulse 2s infinite', '@keyframes pulse': { '0%, 100%': { opacity: 1 }, '50%': { opacity: 0.4 } } }} />
             <Typography sx={{ fontFamily: C.mono, fontSize: '0.65rem', color: C.green, fontWeight: 700 }}>LIVE</Typography>
           </Box>

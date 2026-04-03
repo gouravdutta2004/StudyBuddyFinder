@@ -11,7 +11,7 @@ export default function SquadChat({ groupId, subject, name }) {
   const [messages, setMessages] = useState([{
     id: 'msg-1',
     sender: 'ai',
-    text: `Hi squad! I'm Gemini, your AI Study Tutor. Ask me to explain concepts, summarize notes, or generate quizzes about ${subject}!`
+    text: `Hi squad! I'm Whobee, your AI Study Tutor. Ask me to explain concepts, summarize notes, or generate quizzes about ${subject}!`
   }]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -60,7 +60,7 @@ export default function SquadChat({ groupId, subject, name }) {
           <Sparkles size={20} color="#818cf8" />
         </Box>
         <Box>
-          <Typography variant="subtitle1" fontWeight="800" color="white">Gemini Tutor</Typography>
+          <Typography variant="subtitle1" fontWeight="800" color="white">Whobee AI</Typography>
           <Typography variant="caption" color="rgba(255,255,255,0.5)">Always active in {name}</Typography>
         </Box>
       </Box>
@@ -78,7 +78,7 @@ export default function SquadChat({ groupId, subject, name }) {
             </Box>
             <Typography variant="h5" fontWeight={800} color="white" mb={1}>Squad AI Tutor Locked</Typography>
             <Typography variant="body1" color="rgba(255,255,255,0.6)" mb={4} maxWidth={300}>
-              Upgrade to Pro to chat with Gemini inside your squads for instant concept explanations and quizzes!
+              Upgrade to Pro to chat with Whobee inside your squads for instant concept explanations and quizzes!
             </Typography>
             <Button 
               onClick={() => navigate('/billing')}
@@ -147,7 +147,7 @@ export default function SquadChat({ groupId, subject, name }) {
       <Box component="form" onSubmit={handleSend} sx={{ p: 2, display: 'flex', gap: 1, bgcolor: 'rgba(255,255,255,0.02)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
         <TextField 
           fullWidth size="small" 
-          placeholder="Ask Gemini something..." 
+          placeholder="Ask Whobee something..."
           value={input} onChange={e => setInput(e.target.value)} 
           autoComplete="off"
           disabled={loading || isBasic}

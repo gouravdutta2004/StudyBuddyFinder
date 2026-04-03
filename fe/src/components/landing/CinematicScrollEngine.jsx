@@ -94,7 +94,7 @@ export default function CinematicScrollEngine() {
       <Box ref={bentoRef} sx={{ position: 'absolute', top: '50%', left: '50%', pointerEvents: 'none', transformStyle: 'preserve-3d' }}>
         {[
           { icon: Target, title: "Algorithmic Match", color: '#818cf8', bg: 'rgba(99, 102, 241, 0.1)' },
-          { icon: MessageSquare, title: "Gemini AI", color: '#c084fc', bg: 'rgba(192, 132, 252, 0.1)' },
+          { icon: MessageSquare, title: "Whobee AI", color: '#c084fc', bg: 'rgba(192, 132, 252, 0.1)' },
           { icon: Zap, title: "Live Hubs", color: '#f472b6', bg: 'rgba(244, 114, 182, 0.1)' },
           { icon: Award, title: "Velocity", color: '#34d399', bg: 'rgba(52, 211, 153, 0.1)' }
         ].map((item, i) => {

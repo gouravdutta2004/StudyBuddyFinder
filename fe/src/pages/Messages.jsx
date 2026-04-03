@@ -16,6 +16,7 @@ import {
   useTheme, useMediaQuery, InputAdornment, Tooltip, Dialog, DialogTitle, DialogContent, DialogActions
 } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
+import MessagesCallOverlay from '../components/MessagesCallOverlay';
 
 function formatMsgDate(date) {
   const d = new Date(date);
@@ -200,8 +201,17 @@ export default function Messages() {
   const myBubble = isDark ? '#4f46e5' : '#6366f1';
   const theirBubble = isDark ? '#1e293b' : '#ffffff';
 
+  const triggerCall = (withVideo) => {
+    window.dispatchEvent(new CustomEvent('initiate_webrtc_call', {
+      detail: { withVideo, targetUser: activeUser } 
+    }));
+  };
+
   return (
     <>
+    {/* WebRTC Call UI Overlay (Mounts once, listens globally) */}
+    <MessagesCallOverlay socket={socketRef.current} user={user} activeUser={activeUser} />
+
     <Dialog open={contractModal} onClose={() => setContractModal(false)}
       PaperProps={{ style: { backgroundColor: bg, color: isDark ? 'white' : 'black', borderRadius: 16 } }}>
       <DialogTitle sx={{ fontWeight: 800 }}>🤝 Propose Study Contract</DialogTitle>
@@ -418,12 +428,12 @@ export default function Messages() {
                     </IconButton>
                   </Tooltip>
                   <Tooltip title="Voice Call">
-                    <IconButton size="small" sx={{ color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)', '&:hover': { color: '#6366f1', bgcolor: 'rgba(99,102,241,0.08)' }, borderRadius: '8px' }}>
+                    <IconButton onClick={() => triggerCall(false)} size="small" sx={{ color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)', '&:hover': { color: '#6366f1', bgcolor: 'rgba(99,102,241,0.08)' }, borderRadius: '8px' }}>
                       <Phone size={17} />
                     </IconButton>
                   </Tooltip>
                   <Tooltip title="Video Call">
-                    <IconButton size="small" sx={{ color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)', '&:hover': { color: '#6366f1', bgcolor: 'rgba(99,102,241,0.08)' }, borderRadius: '8px' }}>
+                    <IconButton onClick={() => triggerCall(true)} size="small" sx={{ color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)', '&:hover': { color: '#6366f1', bgcolor: 'rgba(99,102,241,0.08)' }, borderRadius: '8px' }}>
                       <Video size={17} />
                     </IconButton>
                   </Tooltip>

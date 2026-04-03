@@ -273,7 +273,7 @@ function PlanCard({ plan, isActive, loading, statusLoading, onUpgrade, billingCy
           onClick={() => onUpgrade(plan.key)}
           disabled={isActive || loading || statusLoading}
           style={{
-            width:'100%', padding:'0.85rem', borderRadius:14, border:'none',
+            width:'100%', padding:'0.85rem', borderRadius:14,
             background: isActive ? 'rgba(255,255,255,0.06)' : plan.popular ? plan.gradient : `rgba(${plan.color === '#64748b' ? '100,116,139' : plan.color === '#10b981' ? '16,185,129' : '99,102,241'},0.15)`,
             color: isActive ? 'rgba(255,255,255,0.3)' : 'white',
             fontWeight:700, fontSize:'0.88rem', cursor: isActive ? 'default' : 'pointer',

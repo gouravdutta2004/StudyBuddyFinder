@@ -124,7 +124,7 @@ export default function ReactiveHero() {
         
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.3 }}>
           <Typography variant="h6" sx={{ color: 'rgba(255,255,255,0.6)', mb: 8, maxWidth: 640, fontWeight: 400, fontSize: { xs: '1.1rem', md: '1.25rem' }, lineHeight: 1.6 }}>
-            Connect with peers, create live study hubs, leverage Gemini AI, and track your velocity. The complete operating system for modern students.
+            Connect with peers, create live study hubs, leverage Whobee AI, and track your velocity. The complete operating system for modern students.
           </Typography>
         </motion.div>
 

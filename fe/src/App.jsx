@@ -45,7 +45,7 @@ import Analytics from './pages/Analytics';
 import LiveRooms from './pages/LiveRooms';
 
 
-import AIAssistantWidget from './components/AIAssistantWidget';
+
 import WhobeeChat from './components/WhobeeChat';
 import GlobalMessengerWidget from './components/GlobalMessengerWidget';
 import SupportWidget from './components/SupportWidget';
@@ -153,7 +153,6 @@ const Layout = ({ children }) => {
       </Box>
 
       {/* Global widgets */}
-      <AIAssistantWidget />
       <WhobeeChat />
       <GlobalMessengerWidget />
       <SupportWidget />

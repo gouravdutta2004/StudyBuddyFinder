@@ -231,7 +231,7 @@ export default function Navbar({ onMenuClick }) {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
 
             {/* AI Assistant */}
-            <Tooltip title="AI StudyFriend" arrow>
+            <Tooltip title="Whobee AI" arrow>
               <Box
                 component={motion.div}
                 whileHover={{ scale: 1.08 }}

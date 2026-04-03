@@ -38,6 +38,7 @@ export default function StudyRoom() {
   const [socket, setSocket] = useState(null);
   const [showReport, setShowReport] = useState(false);
   const whiteboardRef = useRef(null);
+  const mainWrapperRef = useRef(null);
 
   useEffect(() => {
     const fetchSessionAndJoin = async () => {
@@ -94,8 +95,8 @@ export default function StudyRoom() {
   // A client-side relay would cause echo loops and undefined-roomId errors.
 
   const toggleFullscreen = () => {
-    if (!document.fullscreenElement && whiteboardRef.current) {
-      whiteboardRef.current.requestFullscreen().catch(err => toast.error(`Fullscreen error: ${err.message}`));
+    if (!document.fullscreenElement && mainWrapperRef.current) {
+      mainWrapperRef.current.requestFullscreen().catch(err => toast.error(`Fullscreen error: ${err.message}`));
     } else if (document.fullscreenElement) {
       document.exitFullscreen();
     }
@@ -127,7 +128,7 @@ export default function StudyRoom() {
   const sharedProps = { socket, roomId: id, session, isDark };
 
   return (
-    <Box sx={{
+    <Box ref={mainWrapperRef} sx={{
       display: 'flex', height: '100vh',
       bgcolor: isDark ? '#121212' : '#f0f2f5',
       backgroundImage: `radial-gradient(${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'} 1px, transparent 1px)`,

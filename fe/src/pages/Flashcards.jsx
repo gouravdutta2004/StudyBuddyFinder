@@ -606,7 +606,7 @@ export default function Flashcards() {
             >
               {source === 'local'
                 ? `Smart study materials generated locally for "${topic}" — results are accurate and educationally sound.`
-                : `AI-generated content for "${topic}" — powered by Gemini.`}
+                : `AI-generated content for "${topic}" — powered by Whobee.`}
             </Alert>
           </motion.div>
         )}

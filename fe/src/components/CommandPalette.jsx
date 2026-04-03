@@ -48,7 +48,7 @@ export default function CommandPalette() {
       });
       setAiResponse(res.data.answer);
     } catch {
-      setAiResponse("**Connection Interrupted.** \nI could not securely reach the Gemini Core.");
+      setAiResponse("**Connection Interrupted.** \nI could not securely reach the Whobee Core.");
     } finally {
       setIsThinking(false);
     }

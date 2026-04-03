@@ -207,7 +207,7 @@ export default function SquadVault({ groupId, initialResources = [] }) {
           </Box>
           <Box flex={1}>
             <Typography variant="h6" fontWeight="800" color="white" lineHeight={1.2}>Squad AI Tutor</Typography>
-            <Typography variant="caption" color="text.secondary">Powered by Gemini Pro</Typography>
+            <Typography variant="caption" color="text.secondary">Powered by Whobee AI</Typography>
           </Box>
           <IconButton onClick={() => setIsTutorOpen(false)} sx={{ color: 'rgba(255,255,255,0.5)' }}>
             <X />

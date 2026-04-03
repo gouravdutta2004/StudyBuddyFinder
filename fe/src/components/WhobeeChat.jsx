@@ -132,6 +132,13 @@ export default function WhobeeChat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isStreaming]);
 
+  // Global event listener to open from Navbar
+  useEffect(() => {
+    const handleOpen = () => setIsOpen(true);
+    window.addEventListener('open-ai-widget', handleOpen);
+    return () => window.removeEventListener('open-ai-widget', handleOpen);
+  }, []);
+
   // Stop glow after first open
   useEffect(() => {
     if (isOpen) setHasGlow(false);
@@ -158,7 +165,8 @@ export default function WhobeeChat() {
 
     try {
       // Use native fetch with SSE streaming
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/whobee/chat`, {
+      const wsUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5001';
+      const response = await fetch(`${wsUrl}/api/whobee/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: newHistory }),
@@ -204,11 +212,12 @@ export default function WhobeeChat() {
       });
     } catch (err) {
       if (err.name !== 'AbortError') {
+        const rawErr = err.message;
         setMessages(prev => {
           const updated = [...prev];
           updated[updated.length - 1] = {
             role: 'assistant',
-            content: "⚠️ I ran into a connection issue. Please check that the server is running and try again!",
+            content: `⚠️ I ran into a connection issue: **${rawErr}**`,
           };
           return updated;
         });
