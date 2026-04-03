@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
-import { Building, Trash2, Shield, ShieldOff, CheckCircle, XCircle, Pencil, UserPlus, X, Users, Link2, Ban, Check, Activity, BarChart2, MessageSquare, MessageCircle, BookOpen, Sliders, Search, Sun, Moon, Mail, RefreshCw, Cpu, Database, Menu as MenuIcon, LogOut, Flame, Trophy } from 'lucide-react';
+import { Building, Trash2, Shield, ShieldOff, CheckCircle, XCircle, Pencil, UserPlus, X, Users, Link2, Ban, Check, Activity, BarChart2, MessageSquare, MessageCircle, BookOpen, Sliders, Search, Sun, Moon, Mail, RefreshCw, Cpu, Database, Menu as MenuIcon, LogOut, Flame, Trophy, Terminal, Zap, Globe, Command } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, CartesianGrid } from 'recharts';
 import { useAuth } from '../context/AuthContext';
@@ -10,47 +10,57 @@ import Messages from './Messages';
 import GlobalAnnouncementBanner from '../components/GlobalAnnouncementBanner';
 import UserQuickPeek from '../components/UserQuickPeek';
 import GlobalActivityFeed from '../components/dashboard/GlobalActivityFeed';
-import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Box, Drawer, AppBar, Toolbar, List, Typography, Divider, IconButton, ListItem, ListItemButton, ListItemIcon, ListItemText, 
-  Container, Grid, CardContent, TextField, Button, Avatar, Chip, Dialog, DialogTitle, DialogContent, DialogActions, 
+  Grid, TextField, Button, Avatar, Chip, Dialog, DialogTitle, DialogContent, DialogActions, 
   Switch, FormControlLabel, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Checkbox, Tooltip, 
-  Select, MenuItem, InputAdornment, Tabs, Tab, Autocomplete
+  Select, MenuItem, InputAdornment, Tabs, Tab, Autocomplete, LinearProgress
 } from '@mui/material';
 
-const drawerWidth = 260;
+// ── Design Tokens ──
+const C = {
+  bg: '#050812',
+  surface: 'rgba(255,255,255,0.025)',
+  border: 'rgba(99,102,241,0.15)',
+  borderHover: 'rgba(99,102,241,0.35)',
+  indigo: '#6366f1',
+  cyan: '#06b6d4',
+  amber: '#f59e0b',
+  red: '#ef4444',
+  green: '#10b981',
+  pink: '#ec4899',
+  text: 'rgba(255,255,255,0.85)',
+  muted: 'rgba(255,255,255,0.4)',
+  mono: "'JetBrains Mono', 'Fira Code', monospace",
+};
 
-// --- Premium Card Component ---
+const RAIL_W = 64;
+const DRAWER_W = 220;
+
+// ── InsightCard: flat card with sweep shimmer, no 3D ──
 function TiltCard({ children, sx, onClick }) {
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const mouseXSpring = useSpring(x);
-  const mouseYSpring = useSpring(y);
-  const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["3deg", "-3deg"]);
-  const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-3deg", "3deg"]);
-
-  const handleMouseMove = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const width = rect.width;
-    const height = rect.height;
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-    x.set(mouseX / width - 0.5);
-    y.set(mouseY / height - 0.5);
-  };
-  const handleMouseLeave = () => { x.set(0); y.set(0); };
-
   return (
     <motion.div
-      style={{ rotateX, rotateY, perspective: 1000, display: 'flex', height: '100%', cursor: onClick ? 'pointer' : 'default' }}
-      onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}
-      whileHover={{ scale: 1.01 }} whileTap={onClick ? { scale: 0.99 } : {}}
+      style={{ display: 'flex', height: '100%', cursor: onClick ? 'pointer' : 'default', position: 'relative', overflow: 'hidden' }}
+      whileHover={{ scale: onClick ? 1.01 : 1 }}
+      whileTap={onClick ? { scale: 0.985 } : {}}
       onClick={onClick}
     >
-      <Box sx={{ 
-        width: '100%', bgcolor: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px',
-        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.2)', overflow: 'hidden', ...sx 
+      <Box sx={{
+        width: '100%',
+        bgcolor: C.surface,
+        backdropFilter: 'blur(12px)',
+        border: `1px solid ${C.border}`,
+        borderRadius: '14px',
+        boxShadow: '0 4px 24px rgba(0,0,0,0.35)',
+        overflow: 'hidden',
+        transition: 'border-color 0.2s, box-shadow 0.2s',
+        '&:hover': {
+          borderColor: C.borderHover,
+          boxShadow: `0 0 0 1px ${C.border}, 0 8px 32px rgba(99,102,241,0.12)`,
+        },
+        ...sx
       }}>
         {children}
       </Box>
@@ -58,8 +68,47 @@ function TiltCard({ children, sx, onClick }) {
   );
 }
 
-const staggerContainer = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } };
-const fadeUpSpring = { hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 100, damping: 15 } } };
+// ── Pill status badge ──
+function StatusPill({ label, color }) {
+  const map = { active: C.green, banned: C.red, pending: C.amber, resolved: C.green, Pending: C.amber, Resolved: C.green, healthy: C.green };
+  const c = map[label] || color || C.muted;
+  return (
+    <Box component="span" sx={{
+      display: 'inline-flex', alignItems: 'center', gap: 0.5,
+      px: 1.2, py: 0.3, borderRadius: '6px',
+      bgcolor: `${c}18`, border: `1px solid ${c}40`,
+      color: c, fontFamily: C.mono, fontSize: '0.68rem', fontWeight: 700, letterSpacing: 0.8, textTransform: 'uppercase'
+    }}>
+      <Box sx={{ width: 5, height: 5, borderRadius: '50%', bgcolor: c, flexShrink: 0 }} />
+      {label}
+    </Box>
+  );
+}
+
+// ── KPI Card ──
+function KpiCard({ label, value, icon: Icon, color, delta, onClick }) {
+  return (
+    <motion.div whileHover={{ y: -2 }} onClick={onClick} style={{ cursor: onClick ? 'pointer' : 'default', height: '100%' }}>
+      <Box sx={{
+        p: 2.5, borderRadius: '14px', bgcolor: C.surface, border: `1px solid ${C.border}`,
+        transition: 'border-color .2s', height: '100%',
+        '&:hover': { borderColor: color + '55' },
+        position: 'relative', overflow: 'hidden'
+      }}>
+        <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', bgcolor: color, opacity: 0.7 }} />
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+          <Box sx={{ p: 1, bgcolor: color + '18', borderRadius: '8px' }}><Icon size={18} color={color} /></Box>
+          {delta !== undefined && <Typography sx={{ fontFamily: C.mono, fontSize: '0.7rem', color: delta >= 0 ? C.green : C.red }}>{ delta >= 0 ? '+' : ''}{delta}%</Typography>}
+        </Box>
+        <Typography sx={{ fontFamily: C.mono, fontSize: '1.8rem', fontWeight: 800, color: 'white', lineHeight: 1 }}>{value}</Typography>
+        <Typography sx={{ fontSize: '0.72rem', color: C.muted, fontWeight: 600, mt: 0.5, textTransform: 'uppercase', letterSpacing: 0.8 }}>{label}</Typography>
+      </Box>
+    </motion.div>
+  );
+}
+
+const staggerContainer = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.06 } } };
+const fadeUpSpring = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 120, damping: 18 } } };
 
 export default function AdminPanel() {
   const { user, logout } = useAuth();
@@ -107,6 +156,39 @@ export default function AdminPanel() {
   const [globalPendingUsers, setGlobalPendingUsers] = useState([]);
   const [showOrgModal, setShowOrgModal] = useState(false);
   const [newOrgForm, setNewOrgForm] = useState({ name: '', domain: '', authorizedAdmins: '' });
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [cmdOpen, setCmdOpen] = useState(false);
+  const [cmdQuery, setCmdQuery] = useState('');
+  const [now, setNow] = useState(new Date());
+
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(t);
+  }, []);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); setCmdOpen(v => !v); setCmdQuery(''); }
+      if (e.key === 'Escape') setCmdOpen(false);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
+  const ALL_CMDS = [
+    { id: 'dashboard', label: 'Go to Analytics', shortcut: 'G A', icon: BarChart2 },
+    { id: 'squads', label: 'Go to Squad Matrix', shortcut: 'G S', icon: Users },
+    { id: 'gamification', label: 'Go to Leaderboards', shortcut: 'G L', icon: Trophy },
+    { id: 'engine', label: 'Go to Platform Engine', shortcut: 'G E', icon: Sliders },
+    { id: 'users', label: 'Go to Manage Entities', shortcut: 'G U', icon: Users },
+    { id: 'institutions', label: 'Go to Walled Gardens', shortcut: 'G W', icon: Building },
+    { id: 'feedback', label: 'Go to Moderation Hub', shortcut: 'G M', icon: Shield },
+    { id: 'subjects', label: 'Go to Topics', shortcut: 'G T', icon: BookOpen },
+    { id: 'messages', label: 'Go to Support Chat', shortcut: 'G C', icon: MessageCircle },
+    { id: 'audit', label: 'Go to Audit Trail', shortcut: 'G X', icon: Activity },
+    { id: 'communication', label: 'Go to Communications', shortcut: 'G B', icon: Mail },
+  ];
+  const filteredCmds = cmdQuery ? ALL_CMDS.filter(c => c.label.toLowerCase().includes(cmdQuery.toLowerCase())) : ALL_CMDS;
 
   const fetchData = async () => {
     setLoading(true);
@@ -341,91 +423,160 @@ export default function AdminPanel() {
     { id: 'communication', icon: Mail, label: 'Communications', roles: ['Super Admin'] }
   ].filter(t => t.roles.includes(role));
 
-  const drawerContent = (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'rgba(2, 6, 23, 0.8)', backdropFilter: 'blur(30px)', borderRight: '1px solid rgba(255,255,255,0.05)', color: 'white' }}>
-      <Toolbar sx={{ px: 2, display: 'flex', alignItems: 'center', gap: 1.5, py: 2 }}>
-        <Box sx={{ p: 1, bgcolor: 'rgba(99, 102, 241, 0.1)', borderRadius: '12px' }}>
-          <Activity color="#818cf8" size={24} />
+  // ── Sidebar Rail Content ──
+  const sidebarContent = (
+    <Box sx={{
+      height: '100%', display: 'flex', flexDirection: 'column',
+      bgcolor: `${C.bg}f0`, backdropFilter: 'blur(20px)',
+      borderRight: `1px solid ${C.border}`, color: 'white',
+      width: sidebarOpen ? DRAWER_W : RAIL_W,
+      transition: 'width 0.22s cubic-bezier(0.4,0,0.2,1)', overflow: 'hidden'
+    }}>
+      {/* Logo */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, px: 1.5, py: 2.5, borderBottom: `1px solid ${C.border}` }}>
+        <Box sx={{ width: 36, height: 36, borderRadius: '10px', bgcolor: `${C.indigo}22`, border: `1px solid ${C.indigo}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <Terminal size={18} color={C.indigo} />
         </Box>
-        <Typography variant="h6" fontWeight={900} color="white">Admin Matrix</Typography>
-      </Toolbar>
-      <Divider sx={{ borderColor: 'rgba(255,255,255,0.05)' }} />
-      <List sx={{ flexGrow: 1, px: 2, py: 2, gap: 1, display: 'flex', flexDirection: 'column' }}>
-        {menuItems.map((item) => (
-          <ListItem key={item.id} disablePadding>
-            <ListItemButton 
-              selected={activeTab === item.id} 
-              onClick={() => { setActiveTab(item.id); setMobileOpen(false); }}
-              sx={{ 
-                borderRadius: '16px', mb: 0.5, color: activeTab === item.id ? 'white' : 'rgba(255,255,255,0.6)',
-                bgcolor: activeTab === item.id ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
-                '&:hover': { bgcolor: 'rgba(255,255,255,0.05)', color: 'white' },
-                '&.Mui-selected': { bgcolor: 'rgba(99, 102, 241, 0.15)', '&:hover': { bgcolor: 'rgba(99, 102, 241, 0.25)' } }
-              }}
-            >
-              <ListItemIcon sx={{ minWidth: 40, color: activeTab === item.id ? '#818cf8' : 'inherit' }}><item.icon size={20} /></ListItemIcon>
-              <ListItemText primary={item.label} primaryTypographyProps={{ fontWeight: activeTab === item.id ? 800 : 500 }} />
-            </ListItemButton>
-          </ListItem>
-        ))}
+        {sidebarOpen && <Typography sx={{ fontFamily: C.mono, fontWeight: 800, fontSize: '0.82rem', color: 'white', whiteSpace: 'nowrap', letterSpacing: 1 }}>ADMIN MATRIX</Typography>}
+      </Box>
+
+      {/* Nav Items */}
+      <List sx={{ flexGrow: 1, px: 0.75, py: 1.5, display: 'flex', flexDirection: 'column', gap: 0.25 }}>
+        {menuItems.map((item) => {
+          const active = activeTab === item.id;
+          return (
+            <Tooltip key={item.id} title={!sidebarOpen ? item.label : ''} placement="right">
+              <ListItemButton
+                selected={active}
+                onClick={() => { setActiveTab(item.id); setMobileOpen(false); }}
+                sx={{
+                  borderRadius: '10px', px: 1.5, py: 1, minHeight: 40,
+                  gap: 1.5, color: active ? 'white' : C.muted,
+                  bgcolor: active ? `${C.indigo}22` : 'transparent',
+                  '&:hover': { bgcolor: active ? `${C.indigo}33` : 'rgba(255,255,255,0.04)', color: 'white' },
+                  '&.Mui-selected': { bgcolor: `${C.indigo}22`, '&:hover': { bgcolor: `${C.indigo}33` } },
+                  transition: 'background .15s',
+                }}
+              >
+                <ListItemIcon sx={{ minWidth: 0, color: active ? C.indigo : 'inherit' }}><item.icon size={18} /></ListItemIcon>
+                {sidebarOpen && <ListItemText primary={item.label} primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: active ? 700 : 500, noWrap: true }} />}
+                {sidebarOpen && active && <Box sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: C.indigo, flexShrink: 0 }} />}
+              </ListItemButton>
+            </Tooltip>
+          );
+        })}
       </List>
-      <Divider sx={{ borderColor: 'rgba(255,255,255,0.05)' }} />
-      <List sx={{ px: 2, pb: 2 }}>
-        <ListItem disablePadding>
-          <ListItemButton onClick={handleLogout} sx={{ borderRadius: '16px', color: '#ef4444', '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.1)' } }}>
-            <ListItemIcon sx={{ minWidth: 40, color: 'inherit' }}><LogOut size={20} /></ListItemIcon>
-            <ListItemText primary="Logout System" primaryTypographyProps={{ fontWeight: 700 }} />
+
+      {/* Logout */}
+      <Box sx={{ p: 0.75, borderTop: `1px solid ${C.border}` }}>
+        <Tooltip title={!sidebarOpen ? 'Logout' : ''} placement="right">
+          <ListItemButton onClick={handleLogout} sx={{ borderRadius: '10px', px: 1.5, py: 1, color: C.red, '&:hover': { bgcolor: `${C.red}12` } }}>
+            <ListItemIcon sx={{ minWidth: 0, color: 'inherit' }}><LogOut size={18} /></ListItemIcon>
+            {sidebarOpen && <ListItemText primary="Logout" primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 700 }} sx={{ ml: 1.5 }} />}
           </ListItemButton>
-        </ListItem>
-      </List>
+        </Tooltip>
+      </Box>
     </Box>
   );
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#020617', color: 'white' }}>
+    <Box
+      sx={{ display: 'flex', minHeight: '100vh', bgcolor: C.bg, color: 'white', fontFamily: 'Inter, system-ui, sans-serif' }}
+      onMouseEnter={() => {}}
+    >
       <GlobalAnnouncementBanner isAdminPreview={true} />
-      
-      {/* Background Ambience */}
-      <Box sx={{ position: 'fixed', top: '-10%', left: '-5%', width: 500, height: 500, bgcolor: 'rgba(99, 102, 241, 0.05)', borderRadius: '50%', filter: 'blur(100px)', zIndex: 0, pointerEvents: 'none' }} />
-      <Box sx={{ position: 'fixed', bottom: '-10%', right: '-5%', width: 500, height: 500, bgcolor: 'rgba(16, 185, 129, 0.05)', borderRadius: '50%', filter: 'blur(100px)', zIndex: 0, pointerEvents: 'none' }} />
 
-      {/* App Bar */}
-      <AppBar position="fixed" elevation={0} sx={{ width: { md: `calc(100% - ${drawerWidth}px)` }, ml: { md: `${drawerWidth}px` }, bgcolor: 'rgba(2, 6, 23, 0.8)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-        <Toolbar>
-          <IconButton color="inherit" edge="start" onClick={handleDrawerToggle} sx={{ mr: 2, display: { md: 'none' } }}><MenuIcon /></IconButton>
-          <TextField
-            size="small" placeholder="Deep System Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-            InputProps={{ 
-              startAdornment: <InputAdornment position="start"><Search size={18} color="rgba(255,255,255,0.5)"/></InputAdornment>, 
-              endAdornment: searchQuery ? <InputAdornment position="end"><IconButton size="small" onClick={() => setSearchQuery('')}><X size={16} color="rgba(255,255,255,0.5)"/></IconButton></InputAdornment> : null,
-              sx: { borderRadius: '100px', bgcolor: 'rgba(255,255,255,0.05)', color: 'white', '& fieldset': { border: 'none' } } 
-            }}
-            sx={{ width: { xs: '100%', sm: 300 } }}
-          />
+      {/* Subtle grid background */}
+      <Box sx={{ position: 'fixed', inset: 0, backgroundImage: `radial-gradient(${C.indigo}08 1px, transparent 1px)`, backgroundSize: '28px 28px', pointerEvents: 'none', zIndex: 0 }} />
+      <Box sx={{ position: 'fixed', top: '15%', right: '10%', width: 400, height: 400, bgcolor: `${C.indigo}06`, borderRadius: '50%', filter: 'blur(90px)', pointerEvents: 'none', zIndex: 0 }} />
+
+      {/* ── Command Bar (Top AppBar) ── */}
+      <AppBar position="fixed" elevation={0} sx={{
+        width: { md: `calc(100% - ${sidebarOpen ? DRAWER_W : RAIL_W}px)` },
+        ml: { md: `${sidebarOpen ? DRAWER_W : RAIL_W}px` },
+        bgcolor: `${C.bg}dd`, backdropFilter: 'blur(20px)',
+        borderBottom: `1px solid ${C.border}`,
+        transition: 'width 0.22s, margin-left 0.22s',
+      }}>
+        <Toolbar sx={{ gap: 2, minHeight: '56px !important', px: { xs: 2, md: 3 } }}>
+          <IconButton onClick={handleDrawerToggle} sx={{ color: C.muted, display: { md: 'none' } }}><MenuIcon size={20} /></IconButton>
+
+          {/* Search */}
+          <Box sx={{
+            display: 'flex', alignItems: 'center', gap: 1,
+            bgcolor: 'rgba(255,255,255,0.04)', border: `1px solid ${C.border}`,
+            borderRadius: '10px', px: 1.5, py: 0.6, flex: 1, maxWidth: 380,
+            cursor: 'text', transition: 'border-color .2s',
+            '&:hover': { borderColor: C.indigo + '60' },
+          }} onClick={() => { setCmdOpen(true); setCmdQuery(''); }}>
+            <Search size={14} color={C.muted} />
+            <Typography sx={{ color: C.muted, fontSize: '0.82rem', flex: 1, userSelect: 'none' }}>Search or jump to...</Typography>
+            <Box sx={{ display: 'flex', gap: 0.5 }}>
+              <Box sx={{ px: 0.6, py: 0.1, borderRadius: '4px', border: `1px solid ${C.border}`, fontFamily: C.mono, fontSize: '0.62rem', color: C.muted }}>⌘K</Box>
+            </Box>
+          </Box>
+
           <Box sx={{ flexGrow: 1 }} />
-          <IconButton onClick={() => fetchData()} sx={{ mr: 2, color: '#818cf8', bgcolor: 'rgba(99, 102, 241, 0.1)' }}><RefreshCw size={20} className={loading ? 'animate-spin' : ''}/></IconButton>
+
+          {/* Live clock */}
+          <Typography sx={{ fontFamily: C.mono, fontSize: '0.72rem', color: C.muted, display: { xs: 'none', md: 'block' } }}>
+            {now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </Typography>
+
+          {/* System pulse */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8, bgcolor: `${C.green}12`, border: `1px solid ${C.green}30`, borderRadius: '8px', px: 1.2, py: 0.5, display: { xs: 'none', sm: 'flex' } }}>
+            <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: C.green, animation: 'pulse 2s infinite', '@keyframes pulse': { '0%, 100%': { opacity: 1 }, '50%': { opacity: 0.4 } } }} />
+            <Typography sx={{ fontFamily: C.mono, fontSize: '0.65rem', color: C.green, fontWeight: 700 }}>LIVE</Typography>
+          </Box>
+
+          {/* Role badge */}
+          <Box sx={{ bgcolor: `${C.indigo}20`, border: `1px solid ${C.indigo}40`, borderRadius: '8px', px: 1.5, py: 0.5 }}>
+            <Typography sx={{ fontFamily: C.mono, fontSize: '0.65rem', color: C.indigo, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>{role}</Typography>
+          </Box>
+
+          <IconButton onClick={fetchData} sx={{ color: C.muted, '&:hover': { color: 'white' } }}>
+            <RefreshCw size={16} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
+          </IconButton>
+
           {activeTab === 'users' && role === 'Super Admin' && (
-            <Button variant="contained" startIcon={<UserPlus size={18}/>} onClick={() => setShowModal(true)} sx={{ borderRadius: '100px', fontWeight: 800, bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' } }}>
-               Add User
+            <Button variant="contained" startIcon={<UserPlus size={16} />} onClick={() => setShowModal(true)}
+              sx={{ fontFamily: C.mono, fontSize: '0.72rem', fontWeight: 700, bgcolor: C.indigo, borderRadius: '8px', px: 2, py: 0.7, '&:hover': { bgcolor: '#4f46e5' }, boxShadow: 'none' }}>
+              New User
             </Button>
           )}
         </Toolbar>
+        {loading && <LinearProgress sx={{ height: 2, bgcolor: 'transparent', '& .MuiLinearProgress-bar': { bgcolor: C.indigo } }} />}
       </AppBar>
 
-      {/* Sidebar */}
-      <Box component="nav" sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 }, zIndex: 1200 }}>
-        <Drawer variant="temporary" open={mobileOpen} onClose={handleDrawerToggle} ModalProps={{ keepMounted: true }} sx={{ display: { xs: 'block', md: 'none' }, '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth, border: 'none', bgcolor: 'transparent' } }}>
-          {drawerContent}
-        </Drawer>
-        <Drawer variant="permanent" sx={{ display: { xs: 'none', md: 'block' }, '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth, border: 'none', bgcolor: 'transparent' } }} open>
-          {drawerContent}
-        </Drawer>
+      {/* ── Sidebar ── */}
+      <Box
+        component="nav"
+        onMouseEnter={() => setSidebarOpen(true)}
+        onMouseLeave={() => setSidebarOpen(false)}
+        sx={{ width: { md: sidebarOpen ? DRAWER_W : RAIL_W }, flexShrink: 0, zIndex: 1200, transition: 'width 0.22s', display: { xs: 'none', md: 'block' }, position: 'fixed', top: 0, left: 0, bottom: 0 }}
+      >
+        {sidebarContent}
       </Box>
+      <Drawer variant="temporary" open={mobileOpen} onClose={handleDrawerToggle} ModalProps={{ keepMounted: true }} sx={{ display: { xs: 'block', md: 'none' }, '& .MuiDrawer-paper': { width: DRAWER_W, border: 'none', bgcolor: 'transparent' } }}>
+        {sidebarContent}
+      </Drawer>
 
-      {/* Main Content */}
-      <Box component="main" sx={{ flexGrow: 1, p: { xs: 2, md: 4 }, width: { md: `calc(100% - ${drawerWidth}px)` }, mt: 8, position: 'relative', zIndex: 10 }}>
-        {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 10 }}><RefreshCw className="animate-spin text-indigo-500" size={40} /></Box>
+      {/* ── Main Content ── */}
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1, p: { xs: 2, md: 3.5 },
+          ml: { md: `${sidebarOpen ? DRAWER_W : RAIL_W}px` },
+          mt: '56px', position: 'relative', zIndex: 10,
+          transition: 'margin-left 0.22s',
+          minHeight: 'calc(100vh - 56px)',
+        }}
+      >
+        {loading && !users.length ? (
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '80vh', gap: 2 }}>
+            <Terminal size={36} color={C.indigo} />
+            <Typography sx={{ fontFamily: C.mono, color: C.muted, fontSize: '0.8rem', letterSpacing: 2 }}>LOADING MATRIX DATA...</Typography>
+          </Box>
         ) : (
           <Box component={motion.div} variants={staggerContainer} initial="hidden" animate="visible">
             
@@ -532,11 +683,25 @@ export default function AdminPanel() {
             {/* Entities Management (Users) */}
             {activeTab === 'users' && (
               <Box component={motion.div} variants={fadeUpSpring}>
-                <Tabs value={activeUserTab} onChange={(e, val) => setActiveUserTab(val)} sx={{ mb: 4, '& .MuiTabs-indicator': { bgcolor: '#818cf8', height: 3, borderRadius: 3 }, '& .MuiTab-root': { color: 'rgba(255,255,255,0.5)', fontWeight: 800 }, '& .Mui-selected': { color: 'white !important' } }}>
-                  <Tab label="Standard Users" value="regular" />
-                  <Tab label="System Administrators" value="admins" />
-                  <Tab label="Global Connections" value="connections" />
-                  <Tab label={`Global Approvals (${globalPendingUsers.length})`} value="approvals" />
+                {/* Page header */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                  <Box sx={{ p: 1, bgcolor: `${C.indigo}18`, borderRadius: '10px', border: `1px solid ${C.indigo}30` }}><Users size={20} color={C.indigo} /></Box>
+                  <Typography sx={{ fontFamily: C.mono, fontWeight: 800, fontSize: '1.1rem', letterSpacing: 0.5 }}>Manage Entities</Typography>
+                  <Box sx={{ ml: 'auto', display: 'flex', gap: 1 }}>
+                    {selectedUserIds.length > 0 && role === 'Super Admin' && (
+                      <>
+                        <Button size="small" sx={{ fontFamily: C.mono, fontSize: '0.7rem', bgcolor: `${C.red}18`, color: C.red, border: `1px solid ${C.red}40`, borderRadius: '8px' }} onClick={() => handleBulkAction('delete')}>Del ({selectedUserIds.length})</Button>
+                        <Button size="small" sx={{ fontFamily: C.mono, fontSize: '0.7rem', bgcolor: `${C.amber}18`, color: C.amber, border: `1px solid ${C.amber}40`, borderRadius: '8px' }} onClick={() => handleBulkAction('block')}>Block</Button>
+                      </>
+                    )}
+                    <Button size="small" sx={{ fontFamily: C.mono, fontSize: '0.7rem', bgcolor: `${C.cyan}12`, color: C.cyan, border: `1px solid ${C.cyan}30`, borderRadius: '8px' }} onClick={exportUsersCSV}>↓ CSV</Button>
+                  </Box>
+                </Box>
+                <Tabs value={activeUserTab} onChange={(e, val) => setActiveUserTab(val)} sx={{ mb: 3, '& .MuiTabs-indicator': { bgcolor: C.indigo, height: 2, borderRadius: 2 }, '& .MuiTab-root': { color: C.muted, fontFamily: C.mono, fontSize: '0.75rem', fontWeight: 600, minHeight: 36, textTransform: 'uppercase', letterSpacing: 0.8 }, '& .Mui-selected': { color: 'white !important' } }}>
+                  <Tab label="Users" value="regular" />
+                  <Tab label="Admins" value="admins" />
+                  <Tab label="Connections" value="connections" />
+                  <Tab label={`Approvals (${globalPendingUsers.length})`} value="approvals" />
                 </Tabs>
 
                 {(activeUserTab === 'regular' || activeUserTab === 'admins') && (
@@ -1134,6 +1299,64 @@ export default function AdminPanel() {
           </DialogActions>
         </form>
       </Dialog>
+
+      {/* ── ⌘K Command Palette ── */}
+      <AnimatePresence>
+        {cmdOpen && (
+          <Box
+            sx={{ position: 'fixed', inset: 0, bgcolor: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', zIndex: 9999, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', pt: '15vh' }}
+            onClick={() => setCmdOpen(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: -16, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8, scale: 0.97 }}
+              transition={{ duration: 0.18 }}
+              onClick={e => e.stopPropagation()}
+              style={{ width: '100%', maxWidth: 560 }}
+            >
+              <Box sx={{ bgcolor: '#0d1117', border: `1px solid ${C.border}`, borderRadius: '16px', overflow: 'hidden', boxShadow: '0 32px 80px rgba(0,0,0,0.8)' }}>
+                {/* Search input */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, px: 2.5, py: 2, borderBottom: `1px solid ${C.border}` }}>
+                  <Search size={18} color={C.muted} />
+                  <input
+                    autoFocus
+                    value={cmdQuery}
+                    onChange={e => setCmdQuery(e.target.value)}
+                    placeholder="Type a command or search..."
+                    style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: 'white', fontFamily: 'Inter, sans-serif', fontSize: '1rem' }}
+                  />
+                  <Box sx={{ px: 0.8, py: 0.2, borderRadius: '5px', border: `1px solid ${C.border}`, fontFamily: C.mono, fontSize: '0.62rem', color: C.muted }}>ESC</Box>
+                </Box>
+                {/* Results */}
+                <Box sx={{ maxHeight: 380, overflowY: 'auto' }}>
+                  <Typography sx={{ px: 2.5, pt: 1.5, pb: 0.5, fontFamily: C.mono, fontSize: '0.62rem', color: C.muted, textTransform: 'uppercase', letterSpacing: 1.5 }}>Navigate</Typography>
+                  {filteredCmds.map(cmd => (
+                    <Box
+                      key={cmd.id}
+                      onClick={() => { setActiveTab(cmd.id); setCmdOpen(false); setCmdQuery(''); }}
+                      sx={{
+                        display: 'flex', alignItems: 'center', gap: 2, px: 2.5, py: 1.5,
+                        cursor: 'pointer', transition: 'background .1s',
+                        '&:hover': { bgcolor: `${C.indigo}15` }
+                      }}
+                    >
+                      <Box sx={{ p: 0.8, bgcolor: `${C.indigo}15`, borderRadius: '8px', display: 'flex' }}><cmd.icon size={16} color={C.indigo} /></Box>
+                      <Typography sx={{ flex: 1, fontSize: '0.88rem', fontWeight: 500 }}>{cmd.label}</Typography>
+                      <Box sx={{ px: 0.8, py: 0.2, borderRadius: '5px', border: `1px solid ${C.border}`, fontFamily: C.mono, fontSize: '0.6rem', color: C.muted }}>{cmd.shortcut}</Box>
+                    </Box>
+                  ))}
+                  {filteredCmds.length === 0 && (
+                    <Box sx={{ px: 2.5, py: 4, textAlign: 'center' }}>
+                      <Typography sx={{ fontFamily: C.mono, color: C.muted, fontSize: '0.78rem' }}>No commands found</Typography>
+                    </Box>
+                  )}
+                </Box>
+              </Box>
+            </motion.div>
+          </Box>
+        )}
+      </AnimatePresence>
     </Box>
   );
 }
