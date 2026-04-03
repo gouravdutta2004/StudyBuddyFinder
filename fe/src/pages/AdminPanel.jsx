@@ -108,14 +108,15 @@ export default function AdminPanel() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [userRes, connRes, subRes, confRes, dashRes, growthRes, sessRes, healthRes, reportsRes, auditRes, flaggedRes, lbRes, orgsRes, pendingRes] = await Promise.all([
+      const [userRes, connRes, subRes, confRes, dashRes, growthRes, sessRes, healthRes, reportsRes, auditRes, flaggedRes, lbRes, orgsRes, pendingRes, feedbackRes] = await Promise.all([
         api.get('/admin/users'), api.get('/admin/connections'), api.get('/admin/subjects'), api.get('/settings').catch(() => ({ data: {} })),
         api.get('/admin/analytics/dashboard').catch(() => ({ data: {} })), api.get('/admin/analytics/growth').catch(() => ({ data: [] })),
         api.get('/admin/analytics/sessions').catch(() => ({ data: [] })), api.get('/admin/health').catch(() => ({ data: {} })),
         api.get('/admin/reports').catch(() => ({ data: [] })), api.get('/admin/audit-logs').catch(() => ({ data: [] })),
         api.get('/admin/content-scan').catch(() => ({ data: [] })), api.get('/admin/gamification/leaderboard').catch(() => ({ data: [] })),
         api.get('/admin/organizations').catch(() => ({ data: [] })),
-        api.get('/admin/pending-users/global').catch(() => ({ data: [] }))
+        api.get('/admin/pending-users/global').catch(() => ({ data: [] })),
+        api.get('/admin/feedback').catch(() => ({ data: [] }))
       ]);
       setUsers(userRes.data); setConnections(connRes.data); setSubjects(subRes.data);
       if (confRes.data && Object.keys(confRes.data).length > 0) setSiteConfig(confRes.data);
@@ -126,6 +127,7 @@ export default function AdminPanel() {
       setLeaderboard(lbRes.data);
       setOrganizations(orgsRes.data || []);
       setGlobalPendingUsers(pendingRes.data || []);
+      setFeedback(feedbackRes.data || []);
     } catch { toast.error('Failed to load dashboard metrics'); }
     finally { setLoading(false); }
   };
@@ -188,6 +190,11 @@ export default function AdminPanel() {
   const updateFeedback = async (id, newStatus) => {
     try { await api.put(`/admin/reports/${id}`, { status: newStatus }); toast.success(`Report marked ${newStatus}`); fetchData(); }
     catch (err) { toast.error('Update failed'); }
+  };
+
+  const updatePlatformFeedback = async (id, newStatus) => {
+    try { await api.put(`/admin/feedback/${id}`, { status: newStatus }); toast.success(`Feedback gracefully marked ${newStatus}`); fetchData(); }
+    catch (err) { toast.error('Feedback update failed'); }
   };
 
   const handleModerationAction = async (userId, action) => {
@@ -712,6 +719,7 @@ export default function AdminPanel() {
                   <Typography variant="h5" fontWeight={900} mb={3} display="flex" alignItems="center" gap={1.5} color="white"><Shield color="#f59e0b" size={28} /> Moderation Matrix</Typography>
                   <Tabs value={activeModerationTab} onChange={(e, val) => setActiveModerationTab(val)} sx={{ mb: 4, '& .MuiTabs-indicator': { bgcolor: '#818cf8', height: 3, borderRadius: 3 }, '& .MuiTab-root': { color: 'rgba(255,255,255,0.5)', fontWeight: 800 }, '& .Mui-selected': { color: 'white !important' } }}>
                     <Tab label="User Reports" value="reports" />
+                    <Tab label="Platform Feedback" value="feedback" />
                     <Tab label="Auto-Flagged Content" value="flagged" />
                   </Tabs>
                   
@@ -734,6 +742,23 @@ export default function AdminPanel() {
                               <TableCell align="center"><Chip size="small" label={r.status} color={r.status === 'pending' ? 'warning' : 'success'} sx={{ fontWeight: 800 }} /></TableCell>
                               <TableCell align="right">
                                 {r.status === 'pending' && <Button size="small" variant="outlined" color="success" onClick={() => updateFeedback(r._id, 'resolved')}>Resolve</Button>}
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        ) : activeModerationTab === 'feedback' ? (
+                          feedback.map(f => (
+                            <TableRow key={f._id} hover sx={{ '&:hover': { bgcolor: 'rgba(255,255,255,0.02)' } }}>
+                              <TableCell>
+                                <Typography variant="body2" fontWeight={800} color="white">{f.user?.name || 'Unknown'}</Typography>
+                                <Typography variant="caption" color="rgba(255,255,255,0.5)">{f.user?.email}</Typography>
+                              </TableCell>
+                              <TableCell>
+                                <Chip size="small" label={f.type} sx={{ mb: 1, bgcolor: 'rgba(139, 92, 246, 0.2)', color: '#818cf8', fontWeight: 800 }} /><br/>
+                                <Typography variant="body2">{f.content}</Typography>
+                              </TableCell>
+                              <TableCell align="center"><Chip size="small" label={f.status} color={f.status === 'Pending' ? 'warning' : 'success'} sx={{ fontWeight: 800 }} /></TableCell>
+                              <TableCell align="right">
+                                {f.status === 'Pending' && <Button size="small" variant="contained" color="success" sx={{fontWeight: 800}} onClick={() => updatePlatformFeedback(f._id, 'Resolved')}>Resolve</Button>}
                               </TableCell>
                             </TableRow>
                           ))
