@@ -119,7 +119,7 @@ const SOCIAL_PLATFORMS = [
   { key: 'youtube',   label: 'YouTube',     Icon: Youtube,   color: '#ff0000', bg: 'rgba(255,0,0,0.1)',     href: (v) => `https://youtube.com/@${v}`,      placeholder: 'e.g. mkbhd' },
 ];
 
-function SocialAccountsGrid({ socialLinks = {}, isDark, isSelf = false, onSave }) {
+function SocialAccountsGrid({ socialLinks = {}, isDark, isSelf = false, onSave, sharedHours = 0 }) {
   const [editing, setEditing]   = useState(null); // platform key being edited
   const [inputVal, setInputVal] = useState('');
   const [saving, setSaving]     = useState(false);
@@ -197,90 +197,136 @@ function SocialAccountsGrid({ socialLinks = {}, isDark, isSelf = false, onSave }
           )}
         </Box>
       </Box>
-
-      {/* Platform grid */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1.25 }}>
-        {SOCIAL_PLATFORMS.map(({ key, label, Icon, color, bg, href, placeholder }) => {
-          const val = socialLinks[key];
-          const isConnected = Boolean(val);
-          const url = isConnected ? href(val) : null;
-          const canEdit = isSelf;
-
-          // Only render if connected, or if viewing own profile (to allow connection)
-          if (!isConnected && !canEdit) return null;
-
-          return (
-            <Box
-              key={key}
-              component={isConnected && !canEdit ? 'a' : 'div'}
-              href={isConnected && !canEdit ? url : undefined}
-              target={isConnected && !canEdit ? '_blank' : undefined}
-              rel="noopener noreferrer"
-              onClick={() => {
-                if (canEdit) { openEdit(key, val); return; }
-                if (isConnected && url) window.open(url, '_blank');
-              }}
-              sx={{
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1,
-                p: 2, borderRadius: '14px', textDecoration: 'none', position: 'relative',
-                bgcolor: isConnected ? bg : (isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)'),
-                border: '1px solid',
-                borderColor: isConnected ? color + '33' : (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'),
-                cursor: (canEdit || isConnected) ? 'pointer' : 'default',
-                transition: 'all 0.2s',
-                '&:hover': (canEdit || isConnected) ? {
-                  transform: 'translateY(-3px)',
-                  boxShadow: `0 6px 20px ${color}22`,
-                  borderColor: color + '55',
-                } : {},
-              }}
-            >
-              {/* Connected indicator */}
-              {isConnected && (
-                <Box sx={{
-                  position: 'absolute', top: 10, right: 10,
-                  width: 8, height: 8, borderRadius: '50%', bgcolor: '#22c55e',
-                  boxShadow: '0 0 6px rgba(34,197,94,0.7)',
-                }} />
-              )}
-
-              {/* Edit "+" indicator for own unconnected profiles */}
-              {!isConnected && canEdit && (
-                <Box sx={{
-                  position: 'absolute', top: 8, right: 8,
-                  width: 18, height: 18, borderRadius: '50%',
-                  bgcolor: 'rgba(99,102,241,0.18)',
-                  border: '1px solid rgba(99,102,241,0.4)',
+      {/* Trust threshold lock — shown to non-self viewers with < 3 shared hours */}
+      {!isSelf && sharedHours < 3 && (
+        <div style={{ position: 'relative', marginTop: 8 }}>
+          {/* Blurred ghost icons */}
+          <div style={{ filter: 'blur(6px)', pointerEvents: 'none', opacity: 0.35 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10 }}>
+              {SOCIAL_PLATFORMS.slice(0, 6).map(({ key, Icon, color, bg }) => (
+                <div key={key} style={{
+                  padding: 14, borderRadius: 12, background: bg,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '0.7rem', fontWeight: 900, color: '#818cf8',
-                  lineHeight: 1,
-                }}>+</Box>
-              )}
+                }}>
+                  <Icon size={20} color={color} />
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* Lock overlay */}
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: 'rgba(10,15,28,0.82)',
+            backdropFilter: 'blur(4px)',
+            borderRadius: 12,
+            border: '1px solid rgba(255,255,255,0.08)',
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            padding: '20px 16px', gap: 10, textAlign: 'center',
+          }}>
+            <div style={{
+              width: 40, height: 40, borderRadius: 12,
+              background: 'rgba(99,102,241,0.12)',
+              border: '1px solid rgba(99,102,241,0.3)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              🔒
+            </div>
+            <div style={{ fontWeight: 800, fontSize: '0.82rem', color: 'rgba(255,255,255,0.85)', fontFamily: "'Plus Jakarta Sans','Inter',sans-serif" }}>
+              Social Links Locked
+            </div>
+            <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.5 }}>
+              Complete <strong style={{ color: '#6366f1' }}>3 verified hours</strong> of study together to unlock networking.
+            </div>
+            {/* Progress bar */}
+            <div style={{ width: '100%', marginTop: 4 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
+                <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)', fontWeight: 700 }}>Progress</span>
+                <span style={{ fontSize: '0.65rem', color: '#6366f1', fontWeight: 900, fontFamily: 'monospace' }}>
+                  {sharedHours.toFixed(1)}h / 3h
+                </span>
+              </div>
+              <div style={{ height: 5, background: 'rgba(255,255,255,0.06)', borderRadius: 99, overflow: 'hidden' }}>
+                <div style={{
+                  height: '100%',
+                  width: `${Math.min((sharedHours / 3) * 100, 100)}%`,
+                  background: 'linear-gradient(90deg,#6366f1,#22d3ee)',
+                  borderRadius: 99,
+                  transition: 'width 0.8s ease',
+                }} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
-              <Icon
-                size={24}
-                color={isConnected ? color : (isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.25)')}
-              />
-              <Typography sx={{ fontSize: '0.68rem', fontWeight: 700, color: isConnected ? (isDark ? 'white' : '#0f172a') : 'text.disabled', lineHeight: 1 }}>
-                {label}
-              </Typography>
-              <Box component="span" sx={{ fontSize: '0.6rem', color: isConnected ? color : (canEdit ? '#818cf8' : 'text.disabled'), fontWeight: 600, display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.25 }}>
-                {isConnected ? (
-                  <><ExternalLink size={9} />@{val.slice(0, 12)}{val.length > 12 ? '…' : ''}</>
-                ) : canEdit ? 'Tap to add' : 'Not connected'}
-              </Box>
-            </Box>
-          );
-        })}
-      </Box>
+      {/* Normal grid — only visible to self OR when trust threshold (3h) is met */}
+      {(isSelf || sharedHours >= 3) && (
+        <>
+          {/* Platform grid */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1.25 }}>
+            {SOCIAL_PLATFORMS.map(({ key, label, Icon, color, bg, href, placeholder }) => {
+              const val = socialLinks[key];
+              const isConnected = Boolean(val);
+              const url = isConnected ? href(val) : null;
+              const canEdit = isSelf;
 
-      {/* Inline Edit Modal */}
-      <AnimatePresence>
-        {editing && activePlatform && (
-          <Box
-            sx={{ position: 'fixed', inset: 0, bgcolor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', px: 2 }}
-            onClick={closeEdit}
-          >
+              if (!isConnected && !canEdit) return null;
+
+              return (
+                <Box
+                  key={key}
+                  component={isConnected && !canEdit ? 'a' : 'div'}
+                  href={isConnected && !canEdit ? url : undefined}
+                  target={isConnected && !canEdit ? '_blank' : undefined}
+                  rel="noopener noreferrer"
+                  onClick={() => {
+                    if (canEdit) { openEdit(key, val); return; }
+                    if (isConnected && url) window.open(url, '_blank');
+                  }}
+                  sx={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1,
+                    p: 2, borderRadius: '14px', textDecoration: 'none', position: 'relative',
+                    bgcolor: isConnected ? bg : (isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)'),
+                    border: '1px solid',
+                    borderColor: isConnected ? color + '33' : (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'),
+                    cursor: (canEdit || isConnected) ? 'pointer' : 'default',
+                    transition: 'all 0.2s',
+                    '&:hover': (canEdit || isConnected) ? {
+                      transform: 'translateY(-3px)',
+                      boxShadow: `0 6px 20px ${color}22`,
+                      borderColor: color + '55',
+                    } : {},
+                  }}
+                >
+                  {isConnected && (
+                    <Box sx={{ position: 'absolute', top: 10, right: 10, width: 8, height: 8, borderRadius: '50%', bgcolor: '#22c55e', boxShadow: '0 0 6px rgba(34,197,94,0.7)' }} />
+                  )}
+                  {!isConnected && canEdit && (
+                    <Box sx={{ position: 'absolute', top: 8, right: 8, width: 18, height: 18, borderRadius: '50%', bgcolor: 'rgba(99,102,241,0.18)', border: '1px solid rgba(99,102,241,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 900, color: '#818cf8', lineHeight: 1 }}>+</Box>
+                  )}
+                  <Icon size={24} color={isConnected ? color : (isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.25)')} />
+                  <Typography sx={{ fontSize: '0.68rem', fontWeight: 700, color: isConnected ? (isDark ? 'white' : '#0f172a') : 'text.disabled', lineHeight: 1 }}>
+                    {label}
+                  </Typography>
+                  <Box component="span" sx={{ fontSize: '0.6rem', color: isConnected ? color : (canEdit ? '#818cf8' : 'text.disabled'), fontWeight: 600, display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.25 }}>
+                    {isConnected ? (
+                      <><ExternalLink size={9} />@{val.slice(0, 12)}{val.length > 12 ? '…' : ''}</>
+                    ) : canEdit ? 'Tap to add' : 'Not connected'}
+                  </Box>
+                </Box>
+              );
+            })}
+          </Box>
+
+          {/* Inline Edit Modal */}
+          <AnimatePresence>
+            {editing && activePlatform && (
+              <Box
+                sx={{ position: 'fixed', inset: 0, bgcolor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', px: 2 }}
+                onClick={closeEdit}
+              >
+
             <Box
               component={motion.div}
               initial={{ opacity: 0, scale: 0.92, y: 20 }}
@@ -393,8 +439,10 @@ function SocialAccountsGrid({ socialLinks = {}, isDark, isSelf = false, onSave }
               </Box>
             </Box>
           </Box>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>
+        </>
+      )}
     </Box>
   );
 }
@@ -449,6 +497,7 @@ export default function UserProfile() {
   const [ratings, setRatings] = useState({ average: 0, count: 0 });
   const [endorsements, setEndorsements] = useState([]);
   const [mapOpen, setMapOpen] = useState(false);
+  const [sharedHours, setSharedHours] = useState(0);
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
 
@@ -463,6 +512,14 @@ export default function UserProfile() {
     }).catch(() => toast.error('User not found'))
       .finally(() => setLoading(false));
   }, [targetId]);
+
+  // Fetch shared study hours for Trust Threshold (only when viewing someone else's profile)
+  useEffect(() => {
+    if (!targetId || !me?._id || targetId === me._id) return;
+    api.get(`/users/${targetId}/shared-study-hours`)
+      .then(r => setSharedHours(r.data.hours || 0))
+      .catch(() => {}); // silent — defaults to 0 (locked)
+  }, [targetId, me?._id]);
 
   const handleConnect    = async () => { setConnecting(true); try { await api.post(`/users/connect/${id}`); toast.success('Request sent!'); } catch (e) { toast.error(e.response?.data?.message || 'Failed'); } finally { setConnecting(false); } };
   const handleDisconnect = async () => { if (!window.confirm('Disconnect?')) return; try { await api.post(`/users/disconnect/${id}`); toast.success('Disconnected'); window.location.reload(); } catch (e) { toast.error('Failed'); } };
@@ -781,12 +838,14 @@ export default function UserProfile() {
 
             {/* Social Accounts Grid */}
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-              <SocialAccountsGrid
+            <SocialAccountsGrid
                 socialLinks={profile.socialLinks || {}}
                 isDark={isDark}
                 isSelf={isSelf}
+                sharedHours={sharedHours}
                 onSave={(updatedUser) => setProfile(prev => ({ ...prev, socialLinks: updatedUser.socialLinks }))}
               />
+
             </motion.div>
           </Box>
 

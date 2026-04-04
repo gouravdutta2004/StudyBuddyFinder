@@ -15,10 +15,13 @@ import RoomLeaderboard from '../components/studyroom/RoomLeaderboard';
 import TaskBoard from '../components/studyroom/TaskBoard';
 import VoiceReactions from '../components/studyroom/VoiceReactions';
 import SessionReport from '../components/studyroom/SessionReport';
+import FocusAuditor from '../components/studyroom/FocusAuditor';
+
 import {
   ArrowLeft, Users, Loader2, Maximize, MessageSquare,
-  FileText, PenLine, LayoutList, LogOut
+  FileText, PenLine, LayoutList, LogOut, Lock
 } from 'lucide-react';
+
 import { toast } from 'react-hot-toast';
 import { Box, Typography, IconButton, Button, Tooltip, useTheme } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -139,6 +142,9 @@ export default function StudyRoom() {
       {/* Voice reactions overlay (always mounted if in room) */}
       {socket && <VoiceReactions socket={socket} roomId={id} />}
 
+      {/* AI Focus Auditor — local speech monitoring, no data leaves device */}
+      {socket && user && <FocusAuditor session={session} socket={socket} userId={user._id} />}
+
       {/* Session Report modal */}
       {showReport && (
         <SessionReport {...sharedProps} onClose={() => { setShowReport(false); navigate('/sessions'); }} />
@@ -164,6 +170,16 @@ export default function StudyRoom() {
                 {session.title}
               </Typography>
             </Box>
+
+            {/* E2EE Privacy Badge */}
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 5,
+              background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)',
+              borderRadius: 6, padding: '3px 8px',
+            }}>
+              <Lock size={10} color="#10b981" />
+              <span style={{ fontSize: '0.6rem', fontWeight: 700, color: '#10b981', letterSpacing: 0.3 }}>E2EE</span>
+            </div>
 
             <Box sx={{ width: 1, height: 16, bgcolor: borderColor }} />
 
