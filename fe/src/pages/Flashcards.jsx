@@ -236,7 +236,7 @@ function FlipCard({ card, index, total, onRate, rated }) {
             label={card.difficulty?.toUpperCase() || 'MIXED'} size="small"
             sx={{ bgcolor: (DIFF_COLORS[card.difficulty] || '#6366f1') + '22', color: DIFF_COLORS[card.difficulty] || '#6366f1', fontWeight: 800, fontFamily: 'monospace', mb: 3, border: `1px solid ${(DIFF_COLORS[card.difficulty] || '#6366f1')}44` }}
           />
-          <Typography sx={{ fontSize: '1.1rem', fontWeight: 700, lineHeight: 1.6, color: isDark ? 'white' : '#0f172a' }}>
+          <Typography sx={{ fontFamily: '"Plus Jakarta Sans", sans-serif', fontSize: '1.2rem', fontWeight: 700, lineHeight: 1.6, color: isDark ? 'white' : '#0f172a' }}>
             {card.question}
           </Typography>
           <Typography sx={{ mt: 2.5, fontSize: '0.72rem', color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)', fontFamily: 'monospace' }}>
@@ -328,7 +328,7 @@ function QuizMode({ questions }) {
       </Box>
       <LinearProgress variant="determinate" value={(current / questions.length) * 100}
         sx={{ mb: 3, borderRadius: 2, height: 6, bgcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', '& .MuiLinearProgress-bar': { bgcolor: '#6366f1', borderRadius: 2 } }} />
-      <Typography sx={{ fontSize: '1.1rem', fontWeight: 700, mb: 3, color: isDark ? 'white' : '#0f172a', lineHeight: 1.6 }}>
+      <Typography sx={{ fontFamily: '"Plus Jakarta Sans", sans-serif', fontSize: '1.2rem', fontWeight: 700, mb: 3, color: isDark ? 'white' : '#0f172a', lineHeight: 1.6 }}>
         {q.question}
       </Typography>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
@@ -729,17 +729,24 @@ export default function Flashcards() {
                     <Typography sx={{ fontFamily: 'monospace', fontSize: '0.65rem', color: 'text.secondary', fontWeight: 700, mb: 2 }}>
                       ALL CARDS OVERVIEW
                     </Typography>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
                       {flashcards.map((fc, i) => (
                         <Box key={i} onClick={() => setCurrentCard(i)}
-                          component={motion.div} whileHover={{ x: 4 }}
-                          sx={{ p: 2, borderRadius: '12px', cursor: 'pointer', border: `1px solid ${i === currentCard ? '#6366f1' : border}`, bgcolor: i === currentCard ? 'rgba(99,102,241,0.05)' : card, display: 'flex', alignItems: 'flex-start', gap: 2, transition: 'all 0.15s' }}>
-                          <Box sx={{ minWidth: 28, height: 28, borderRadius: '8px', bgcolor: i === currentCard ? '#6366f1' : (isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)'), display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'monospace', fontWeight: 900, fontSize: '0.7rem', color: i === currentCard ? 'white' : 'text.secondary' }}>
-                            {i + 1}
+                          component={motion.div} whileHover={{ y: -4 }}
+                          sx={{ p: 2, borderRadius: '12px', cursor: 'pointer', border: `1px solid ${i === currentCard ? '#6366f1' : border}`, bgcolor: i === currentCard ? 'rgba(99,102,241,0.05)' : card, display: 'flex', flexDirection: 'column', gap: 1, transition: 'all 0.15s' }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                             <Typography sx={{ fontFamily: 'monospace', fontSize: '0.65rem', fontWeight: 900, color: '#6366f1', textTransform: 'uppercase', letterSpacing: 1 }}>
+                               SUBJECT // {topic}
+                             </Typography>
+                             <Chip label={fc.difficulty?.toUpperCase() || 'MIXED'} size="small" sx={{ height: 16, fontSize: '0.58rem', fontFamily: 'monospace', fontWeight: 800, bgcolor: (DIFF_COLORS[fc.difficulty] || '#6366f1') + '18', color: DIFF_COLORS[fc.difficulty] || '#6366f1' }} />
                           </Box>
-                          <Box sx={{ flex: 1 }}>
-                            <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: isDark ? 'white' : '#0f172a', lineHeight: 1.4 }}>{fc.question}</Typography>
-                            <Chip label={fc.difficulty?.toUpperCase() || 'MIXED'} size="small" sx={{ mt: 0.5, height: 16, fontSize: '0.58rem', fontFamily: 'monospace', fontWeight: 800, bgcolor: (DIFF_COLORS[fc.difficulty] || '#6366f1') + '18', color: DIFF_COLORS[fc.difficulty] || '#6366f1' }} />
+                          <Box sx={{ flex: 1, mt: 1 }}>
+                            <Typography sx={{ fontFamily: '"Plus Jakarta Sans", sans-serif', fontSize: '0.95rem', fontWeight: 800, color: isDark ? 'white' : '#0f172a', lineHeight: 1.4 }}>{fc.question}</Typography>
+                          </Box>
+                          <Box display="flex" justifyContent="flex-end" alignItems="center" sx={{ mt: 1 }}>
+                            <Box sx={{ minWidth: 24, height: 24, borderRadius: '6px', bgcolor: i === currentCard ? '#6366f1' : (isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)'), display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'monospace', fontWeight: 900, fontSize: '0.65rem', color: i === currentCard ? 'white' : 'text.secondary' }}>
+                              {i + 1}
+                            </Box>
                           </Box>
                         </Box>
                       ))}

@@ -1,102 +1,145 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from './AuthContext';
-import { toast } from 'react-hot-toast';
+import {
+  notifyGeneral,
+  notifyNewMessage,
+  notifyQuestCompleted,
+  notifySOSIncoming,
+  notifySOSNoExperts,
+  notifySOSBroadcast,
+  notifySOSAccepted,
+  notifySOSError,
+  notifySuccess,
+  notifyError,
+} from '../components/ui/PremiumToast';
 
 const SocketContext = createContext();
 
-export const useSocket = () => {
-    return useContext(SocketContext);
-};
+export const useSocket = () => useContext(SocketContext);
 
 export const SocketProvider = ({ children }) => {
-    const [socket, setSocket] = useState(null);
-    const { user } = useAuth();
+  const [socket, setSocket] = useState(null);
+  const { user } = useAuth();
 
-    useEffect(() => {
-        if (!user) {
-            if (socket) {
-                socket.disconnect();
-                setSocket(null);
-            }
-            return;
-        }
+  useEffect(() => {
+    if (!user) {
+      if (socket) { socket.disconnect(); setSocket(null); }
+      return;
+    }
 
-        const newSocket = io(import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5001', {
-            withCredentials: true
-        });
-        setSocket(newSocket);
+    const SERVER = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+    const newSocket = io(SERVER, {
+      withCredentials: true,
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 2000,
+    });
+    setSocket(newSocket);
 
-        newSocket.emit('setup', user._id);
+    // ── Join personal notification room ──
+    newSocket.emit('setup', user._id);
+    newSocket.on('connect', () => { newSocket.emit('setup', user._id); });
 
-        newSocket.on('notification', (data) => {
-            toast(data.message, {
-                icon: '🔔',
-                style: { borderRadius: '10px', background: '#333', color: '#fff' },
-            });
-        });
+    // ── 1. General bell notifications (connection requests, etc.) ──
+    newSocket.on('notification', (data) => {
+      notifyGeneral(data.message, {
+        type: data.type,       // e.g. 'connection_request'
+        actor: data.actorName, // who triggered it
+      });
+    });
 
-        newSocket.on('message_received', (message) => {
-            if (!window.location.pathname.includes('/messages')) {
-                const senderName = message.sender?.name || 'a connection';
-                toast(`New message from ${senderName}`, {
-                    icon: '💬',
-                    style: { borderRadius: '10px', background: '#333', color: '#fff' },
-                });
-            }
-        });
+    // ── 2. New direct message (only when not on /messages page) ──
+    newSocket.on('message_received', (message) => {
+      if (window.location.pathname.includes('/messages')) return;
+      const sender = message.sender;
+      notifyNewMessage({
+        senderName: sender?.name || 'Someone',
+        senderAvatar: sender?.avatar,
+        preview: message.content,
+        onClick: () => { window.location.href = `/messages?with=${sender?._id || ''}`; },
+      });
+    });
 
-        newSocket.on('quest_completed', (data) => {
-            toast.success(`🎉 Quest Completed: ${data.questName}\n+${data.xp} XP!`, {
-                duration: 5000,
-                style: { borderRadius: '16px', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', fontWeight: 'bold', padding: '16px' },
-            });
-        });
+    // ── 3. Quest / achievement completed ──
+    newSocket.on('quest_completed', (data) => {
+      notifyQuestCompleted({
+        questName: data.questName,
+        xp: data.xp,
+        badge: data.badge || null,
+      });
+    });
 
-        // SOS Beacon System
-        newSocket.on('incoming_sos', (payload) => {
-            toast((t) => (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <div style={{ fontWeight: 900, fontSize: '1.1rem', color: '#ef4444' }}>🚨 SOS Beacon: {payload.subject}</div>
-                    <div style={{ fontSize: '0.85rem' }}><b>{payload.userName}</b> is stuck on: <i>{payload.topic}</i></div>
-                    <button 
-                        onClick={() => {
-                            newSocket.emit('accept_sos', { callerId: payload.userId, helperName: user.name });
-                            toast.dismiss(t.id);
-                        }}
-                        style={{ background: '#ef4444', color: 'white', padding: '6px 12px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 800, marginTop: '4px' }}
-                    >
-                        Accept & Help
-                    </button>
-                </div>
-            ), {
-                duration: 15000,
-                style: { border: '2px solid #ef4444', backgroundColor: '#fff0f0' } // simple fallback inline styling
-            });
-        });
+    // ── 4. SOS: incoming beacon — I can help ──
+    newSocket.on('incoming_sos', (payload) => {
+      notifySOSIncoming({
+        payload,
+        socket: newSocket,
+        userName: user.name,
+      });
+    });
 
-        newSocket.on('sos_accepted', ({ roomId, helperName }) => {
-            toast.success(`${helperName || 'An expert'} accepted your SOS! Routing...`, {
-                duration: 4000, icon: '🚀'
-            });
-            setTimeout(() => {
-                window.location.href = `/live?room=${roomId}`;
-            }, 1500);
-        });
+    // ── 5. SOS: nobody online to receive it ──
+    newSocket.on('sos_no_experts', () => {
+      notifySOSNoExperts();
+    });
 
-        return () => {
-            newSocket.off('notification');
-            newSocket.off('message_received');
-            newSocket.off('quest_completed');
-            newSocket.disconnect();
-            setSocket(null);
-        };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [user]);
+    // ── 6. SOS: server confirmed broadcast count ──
+    newSocket.on('sos_broadcast_count', ({ count }) => {
+      notifySOSBroadcast({ count });
+    });
 
-    return (
-        <SocketContext.Provider value={{ socket }}>
-            {children}
-        </SocketContext.Provider>
-    );
+    // ── 7. SOS: accepted — launch the room ──
+    newSocket.on('sos_accepted', ({ roomId, helperName, isHelper }) => {
+      notifySOSAccepted({ helperName, isHelper });
+      setTimeout(() => {
+        window.location.href = `/study-room/${roomId}`;
+      }, 2000);
+    });
+
+    // ── 8. SOS: server error ──
+    newSocket.on('sos_error', ({ message }) => {
+      notifySOSError({ message });
+    });
+
+    // ── 9. Badge unlocked ──
+    newSocket.on('badge_unlocked', (data) => {
+      notifySuccess(
+        `Badge Unlocked: ${data.badge || data.name}`,
+        data.description || 'Keep studying to unlock more achievements!'
+      );
+    });
+
+    // ── 10. Session reminder ──
+    newSocket.on('session_reminder', (data) => {
+      notifyGeneral(
+        `Your session "${data.title}" starts in ${data.minutesLeft || 15} minutes`,
+        { type: 'session_reminder' }
+      );
+    });
+
+    // Cleanup
+    return () => {
+      newSocket.off('connect');
+      newSocket.off('notification');
+      newSocket.off('message_received');
+      newSocket.off('quest_completed');
+      newSocket.off('incoming_sos');
+      newSocket.off('sos_no_experts');
+      newSocket.off('sos_broadcast_count');
+      newSocket.off('sos_accepted');
+      newSocket.off('sos_error');
+      newSocket.off('badge_unlocked');
+      newSocket.off('session_reminder');
+      newSocket.disconnect();
+      setSocket(null);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
+  return (
+    <SocketContext.Provider value={{ socket }}>
+      {children}
+    </SocketContext.Provider>
+  );
 };

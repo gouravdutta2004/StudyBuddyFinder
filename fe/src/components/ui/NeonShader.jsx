@@ -88,7 +88,7 @@ export function NeonShader({ className = '', style = {}, speed = 1 }) {
     scene.add(new THREE.Mesh(geometry, material));
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     container.appendChild(renderer.domElement);
 
     // ─── Resize Handler ──────────────────────────────────────────────────────
@@ -114,9 +114,17 @@ export function NeonShader({ className = '', style = {}, speed = 1 }) {
     sceneRef.current = { camera, scene, renderer, uniforms, animationId: 0 };
     animate();
 
+    // ─── Pause RAF when tab is hidden ────────────────────────────────────────
+    const onVisibility = () => {
+      if (document.hidden) { cancelAnimationFrame(rafId); }
+      else { animate(); }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+
     // ─── Cleanup ─────────────────────────────────────────────────────────────
     return () => {
       window.removeEventListener('resize', onResize);
+      document.removeEventListener('visibilitychange', onVisibility);
       cancelAnimationFrame(rafId);
       if (container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);

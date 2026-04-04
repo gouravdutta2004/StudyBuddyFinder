@@ -108,15 +108,14 @@
     flex-direction: column;
   }
 
-  /* Smooth theme transitions — targeted elements only */
-  div, section, nav, aside, header, footer, main,
-  p, h1, h2, h3, h4, h5, h6, span, a, button, input,
-  textarea, select, label, article {
+  /* Theme transitions — ONLY on elements that actually change theme colors */
+  /* Targeted via .theme-transition class, not globally on all elements */
+  .theme-transition,
+  .theme-transition *:not(canvas):not(video):not(img) {
     transition:
       background-color 0.25s ease,
       border-color 0.25s ease,
-      color 0.2s ease,
-      box-shadow 0.25s ease;
+      color 0.2s ease;
   }
 
   /* Headings */

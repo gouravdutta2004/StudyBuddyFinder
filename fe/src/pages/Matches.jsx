@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
+import { DottedSurface } from '../components/ui/DottedSurface';
 
 export default function Matches() {
   const theme = useTheme();
@@ -89,8 +90,9 @@ export default function Matches() {
   }
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 6, px: 2, position: 'relative', overflow: 'hidden' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 6, px: 2, position: 'relative', overflow: 'hidden', minHeight: '100vh' }}>
       {/* Dynamic Background */}
+      <DottedSurface className="opacity-30" />
       <Box sx={{ position: 'fixed', top: '10%', left: '-10%', width: 500, height: 500, bgcolor: 'rgba(139, 92, 246, 0.1)', borderRadius: '50%', filter: 'blur(120px)', zIndex: 0, pointerEvents: 'none' }} />
       <Box sx={{ position: 'fixed', bottom: '-10%', right: '-10%', width: 500, height: 500, bgcolor: 'rgba(16, 185, 129, 0.05)', borderRadius: '50%', filter: 'blur(120px)', zIndex: 0, pointerEvents: 'none' }} />
 
@@ -129,6 +131,7 @@ export default function Matches() {
         <AnimatePresence>
           {matches.slice(0, 3).reverse().map((u, index) => {
             const isTop = index === matches.slice(0, 3).length - 1;
+            const isSent = user?.sentRequests?.some(r => typeof r === 'string' ? r === u._id : r._id === u._id) || user?.connections?.includes(u._id);
 
             return (
               <Box
@@ -191,18 +194,36 @@ export default function Matches() {
                   {/* Swipe Action Buttons */}
                   {isTop && (
                     <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 4, pb: 2 }}>
-                      <IconButton 
-                        onClick={() => handleAction(u._id, 'skip', 'left')}
-                        sx={{ width: 64, height: 64, bgcolor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)', transition: '0.2s', '&:hover': { bgcolor: '#ef4444', color: 'white', transform: 'scale(1.1)' } }}
-                      >
-                        <X size={32} />
-                      </IconButton>
-                      <IconButton 
-                        onClick={() => handleAction(u._id, 'connect', 'right')}
-                        sx={{ width: 64, height: 64, bgcolor: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.3)', transition: '0.2s', '&:hover': { bgcolor: '#10b981', color: 'white', transform: 'scale(1.1)' } }}
-                      >
-                        <Check size={32} />
-                      </IconButton>
+                      {isSent ? (
+                        <Button
+                          disabled
+                          variant="contained"
+                          sx={{ 
+                            height: 64, px: 4, borderRadius: '32px',
+                            bgcolor: 'rgba(139, 92, 246, 0.2)', color: '#8b5cf6',
+                            fontWeight: 900, textTransform: 'none', fontSize: '1.1rem',
+                            border: '1px solid rgba(139, 92, 246, 0.5)',
+                            '&.Mui-disabled': { color: '#8b5cf6', bgcolor: 'rgba(139, 92, 246, 0.1)' }
+                          }}
+                        >
+                          Request Sent ✨
+                        </Button>
+                      ) : (
+                        <>
+                          <IconButton 
+                            onClick={() => handleAction(u._id, 'skip', 'left')}
+                            sx={{ width: 64, height: 64, bgcolor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)', transition: '0.2s', '&:hover': { bgcolor: '#ef4444', color: 'white', transform: 'scale(1.1)' } }}
+                          >
+                            <X size={32} />
+                          </IconButton>
+                          <IconButton 
+                            onClick={() => handleAction(u._id, 'connect', 'right')}
+                            sx={{ width: 64, height: 64, bgcolor: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.3)', transition: '0.2s', '&:hover': { bgcolor: '#10b981', color: 'white', transform: 'scale(1.1)' } }}
+                          >
+                            <Check size={32} />
+                          </IconButton>
+                        </>
+                      )}
                     </Box>
                   )}
                 </Box>

@@ -8,6 +8,7 @@ import RatingModal from '../components/RatingModal';
 import { Container, Typography, Box, Button, Tabs, Tab, Grid, Dialog, DialogTitle, DialogContent, DialogActions, TextField, IconButton, FormControlLabel, Switch, CircularProgress, useTheme, ToggleButton, ToggleButtonGroup, Chip, Avatar } from '@mui/material';
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, format, isSameMonth, isSameDay, addMonths, subMonths, parseISO, isPast } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
+import { SpiralAnimation } from '../components/ui/SpiralAnimation';
 
 const defaultForm = { title: '', description: '', subject: '', scheduledAt: '', duration: 60, isOnline: true, meetingLink: '', location: '', maxParticipants: 5, recurrence: 'NONE' };
 
@@ -77,8 +78,10 @@ export default function Sessions() {
   if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', py: 10 }}><CircularProgress sx={{ color: '#6366f1' }} /></Box>;
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4, mb: 10, fontFamily: "'Inter', sans-serif" }}>
-      {ratingSession && <RatingModal session={ratingSession} onClose={() => setRatingSession(null)} />}
+    <>
+      <SpiralAnimation />
+      <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 1, py: 4, mb: 10, fontFamily: "'Inter', sans-serif" }}>
+        {ratingSession && <RatingModal session={ratingSession} onClose={() => setRatingSession(null)} />}
       
       {/* ── SPRINT HEADER ── */}
       <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, alignItems: { xs: 'flex-start', md: 'center' }, justifyContent: 'space-between', gap: 2, mb: 3 }}>
@@ -86,7 +89,7 @@ export default function Sessions() {
           <Typography sx={{ fontFamily: 'monospace', fontSize: '0.75rem', fontWeight: 900, color: '#f59e0b', letterSpacing: 3, mb: 0.5, display: 'flex', alignItems: 'center', gap: 1 }}>
             <Terminal size={14} /> /SYS/MODULE_01/SPRINT
           </Typography>
-          <Typography sx={{ fontSize: '2.5rem', fontWeight: 900, color: isDark ? 'white' : '#0f172a', fontStyle: 'italic', letterSpacing: -1.5, lineHeight: 1 }}>
+          <Typography sx={{ fontFamily: '"Plus Jakarta Sans", sans-serif', fontSize: '2.5rem', fontWeight: 900, color: isDark ? 'white' : '#0f172a', fontStyle: 'normal', letterSpacing: -1.5, lineHeight: 1 }}>
             ACTIVE SPRINTS
           </Typography>
         </Box>
@@ -154,8 +157,8 @@ export default function Sessions() {
           </Box>
         </DialogContent>
         <DialogActions sx={{ p: 3 }}>
-          <Button onClick={() => setShowForm(false)} variant="outlined" sx={{ fontWeight: 900, fontStyle: 'italic', borderRadius: '8px' }}>Abort</Button>
-          <Button type="submit" form="create-session-form" variant="contained" disabled={creating} sx={{ fontWeight: 900, fontStyle: 'italic', borderRadius: '8px', bgcolor: '#10b981', '&:hover': { bgcolor: '#059669' } }}>{creating ? 'Sequencing...' : 'Sequence Start'}</Button>
+          <Button onClick={() => setShowForm(false)} variant="outlined" sx={{ fontWeight: 900, fontStyle: 'normal', borderRadius: '8px' }}>Abort</Button>
+          <Button type="submit" form="create-session-form" variant="contained" disabled={creating} sx={{ fontWeight: 900, fontStyle: 'normal', borderRadius: '8px', bgcolor: '#10b981', '&:hover': { bgcolor: '#059669' } }}>{creating ? 'Sequencing...' : 'Sequence Start'}</Button>
         </DialogActions>
       </Dialog>
 
@@ -191,14 +194,14 @@ export default function Sessions() {
                   <Box sx={{ flexShrink: 0, width: 36, height: 36, borderRadius: '8px', bgcolor: 'rgba(99,102,241,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Users size={16} color="#6366f1" /></Box>
                   <Box>
                     <Typography sx={{ fontFamily: 'monospace', fontSize: '0.65rem', fontWeight: 900, color: 'text.secondary', letterSpacing: 1 }}>CREW</Typography>
-                    <Typography sx={{ fontWeight: 800 }}>{calendarSessionObj.participants?.length || 0} / {calendarSessionObj.maxParticipants} MANIFESTED</Typography>
+                    <Typography sx={{ fontFamily: '"Plus Jakarta Sans", sans-serif', fontWeight: 800 }}>{calendarSessionObj.participants?.length || 0} / {calendarSessionObj.maxParticipants} MANIFESTED</Typography>
                   </Box>
                 </Box>
               </Box>
 
               {calendarSessionObj.description && (
                 <Box sx={{ mt: 3, p: 2, bgcolor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)', borderRadius: '8px', borderLeft: '3px solid #f59e0b' }}>
-                  <Typography sx={{ fontSize: '0.85rem', fontWeight: 500 }}>{calendarSessionObj.description}</Typography>
+                  <Typography sx={{ fontFamily: '"Plus Jakarta Sans", sans-serif', fontSize: '0.85rem', fontWeight: 500 }}>{calendarSessionObj.description}</Typography>
                 </Box>
               )}
             </DialogContent>
@@ -223,18 +226,40 @@ export default function Sessions() {
           <Typography variant="body2" mt={1}>Initialize a sprint to set the pace.</Typography>
         </Box>
       ) : viewMode === 'list' ? (
-        <Grid container spacing={3}>
+        <Box sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' },
+          gap: 3,
+        }}>
           {displaySessions.map(s => (
-            <Grid item xs={12} md={6} lg={4} key={s._id}>
+            <Box key={s._id} sx={{
+              bgcolor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.7)',
+              backdropFilter: 'blur(24px)',
+              border: '1px solid',
+              borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+              borderRadius: '24px',
+              boxShadow: isDark
+                ? '0 8px 32px 0 rgba(0,0,0,0.35)'
+                : '0 8px 32px 0 rgba(0,0,0,0.10)',
+              transition: 'all 0.3s cubic-bezier(0.4,0,0.2,1)',
+              overflow: 'hidden',
+              '&:hover': {
+                transform: 'translateY(-8px)',
+                boxShadow: isDark
+                  ? '0 16px 48px 0 rgba(79,70,229,0.3)'
+                  : '0 16px 48px 0 rgba(79,70,229,0.15)',
+                borderColor: 'rgba(99,102,241,0.3)',
+              },
+            }}>
               <SessionCard session={s} currentUserId={user?._id} onJoin={handleJoin} onLeave={handleLeave} onDelete={handleDelete} />
-            </Grid>
+            </Box>
           ))}
-        </Grid>
+        </Box>
       ) : (
         <Box sx={{ bgcolor: isDark ? '#0d1117' : '#ffffff', borderRadius: '16px', border: '3px solid', borderColor: isDark ? 'rgba(99,102,241,0.2)' : 'rgba(99,102,241,0.3)', overflow: 'hidden' }}>
           {/* Calendar Header */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 3, borderBottom: '3px solid', borderColor: isDark ? 'rgba(99,102,241,0.2)' : 'rgba(99,102,241,0.3)' }}>
-            <Typography sx={{ fontSize: '1.5rem', fontWeight: 900, fontStyle: 'italic', textTransform: 'uppercase', color: isDark ? 'white' : '#0f172a' }}>
+            <Typography sx={{ fontSize: '1.5rem', fontWeight: 900, fontStyle: 'normal', textTransform: 'uppercase', color: isDark ? 'white' : '#0f172a' }}>
               {format(currentMonth, 'MMMM yyyy')}
             </Typography>
             <Box display="flex" gap={1}>
@@ -284,6 +309,7 @@ export default function Sessions() {
           </Grid>
         </Box>
       )}
-    </Container>
+      </Container>
+    </>
   );
 }

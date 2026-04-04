@@ -86,18 +86,20 @@ function RailItem({ to, icon: Icon, label, color, isActive, expanded, unread, on
             color={isActive ? color : (isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.45)')}
             style={{ transition: 'all 0.2s' }}
           />
-          {/* Badge */}
+          {/* Phase 3 FIX: Pulsing red dot instead of count badge */}
           {unread > 0 && (
-            <Box sx={{
-              position: 'absolute', top: -4, right: -4,
-              width: 15, height: 15, borderRadius: '50%',
-              bgcolor: '#ef4444',
-              border: `2px solid ${isDark ? '#06090f' : '#f0f2f8'}`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '0.5rem', fontWeight: 900, color: 'white',
-            }}>
-              {unread > 9 ? '9+' : unread}
-            </Box>
+            <Box
+              component={motion.div}
+              animate={{ scale: [1, 1.3, 1], opacity: [1, 0.6, 1] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+              sx={{
+                position: 'absolute', top: -3, right: -3,
+                width: 9, height: 9, borderRadius: '50%',
+                bgcolor: '#ef4444',
+                border: `2px solid ${isDark ? '#06090f' : '#f0f2f8'}`,
+                boxShadow: '0 0 6px rgba(239,68,68,0.8)',
+              }}
+            />
           )}
         </Box>
 
@@ -143,7 +145,7 @@ export default function Sidebar({ mobileOpen = false, setMobileOpen = () => {} }
 
   React.useEffect(() => {
     if (!socket || !user) return;
-    const msgHandler = (msg) => {
+    const msgHandler = () => {
       if (!location.pathname.startsWith('/messages')) {
         setUnreadCount(p => p + 1);
       }
@@ -152,16 +154,26 @@ export default function Sidebar({ mobileOpen = false, setMobileOpen = () => {} }
     return () => { socket.off('message_received', msgHandler); };
   }, [socket, user, location.pathname]);
 
+  // Phase 3 FIX: Reset unread count when user visits /messages
+  React.useEffect(() => {
+    if (location.pathname.startsWith('/messages')) {
+      setUnreadCount(0);
+    }
+  }, [location.pathname]);
+
   const handleTriggerSOS = () => {
     if (!sosSubject.trim()) return toast.error('Subject is required');
+    if (!socket?.connected) return toast.error('Not connected to server. Please refresh.');
     socket.emit('trigger_sos', {
       subject: sosSubject.trim(),
-      topic: sosTopic.trim(),
-      userId: user._id,
-      userName: user.name
+      topic:   sosTopic.trim(),
+      userId:  user._id,
+      userName: user.name,
     });
-    toast.success('SOS Beacon deployed! Searching for experts...');
+    // Toast is handled by SocketContext (sos_broadcast_count event)
     setSosModal(false);
+    setSosSubject('');
+    setSosTopic('');
   };
 
   const railWidth = expanded ? 220 : 72;

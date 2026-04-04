@@ -6,6 +6,7 @@ import { Box, Typography, Button, TextField, Grid, Chip, Avatar, CircularProgres
 import { Users, Plus, X, Search, ChevronRight, LogOut, Globe, Lock, Shield, Crosshair, Target, Radio, Terminal } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
+import { BackgroundBoxes } from '../components/ui/BackgroundBoxes';
 
 const SUBJECT_OPTIONS = ['CS','Math','Physics','Chemistry','Biology','History','Economics','Literature','Engineering','Psychology','Other'];
 const SANS = '"Inter", "Roboto", sans-serif';
@@ -143,8 +144,11 @@ export default function PublicGroups() {
   };
 
   return (
-    <Box sx={{ py: 6, px: { xs: 2, md: 4 }, bgcolor: isDark ? '#050505' : '#f0f0f0', backgroundImage: isDark ? 'radial-gradient(circle at 50% 0, rgba(255, 70, 85, 0.05), transparent 60%)' : 'none' }}>
-      <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
+    <Box sx={{ py: 6, px: { xs: 2, md: 4 }, position: 'relative', overflow: 'hidden', minHeight: '100vh', bgcolor: isDark ? '#050505' : '#f0f0f0', backgroundImage: isDark ? 'radial-gradient(circle at 50% 0, rgba(255, 70, 85, 0.05), transparent 60%)' : 'none' }}>
+      <Box sx={{ position: 'absolute', inset: 0, zIndex: 0, mixBlendMode: 'screen' }}>
+         <BackgroundBoxes />
+      </Box>
+      <Box sx={{ maxWidth: 1200, mx: 'auto', position: 'relative', zIndex: 1 }}>
         
         {/* Header */}
         <Box sx={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', mb: 6, flexWrap: 'wrap', gap: 3, borderBottom: '1px solid', borderColor: isDark ? '#333' : '#ddd', pb: 2 }}>
@@ -194,7 +198,7 @@ export default function PublicGroups() {
 
       {/* Found Squad Dialog */}
       <Dialog open={showForm} onClose={() => setShowForm(false)} maxWidth="sm" fullWidth
-        PaperProps={{ sx: { borderRadius: 0, bgcolor: isDark ? '#0a0a0a' : '#fff', border: `1px solid ${RED}` } }}>
+        PaperProps={{ sx: { borderRadius: '16px', bgcolor: isDark ? 'rgba(10, 10, 10, 0.65)' : 'rgba(255, 255, 255, 0.65)', backdropFilter: 'blur(20px)', border: `1px solid ${RED}` } }}>
         <DialogTitle sx={{ pb: 2, pt: 3, px: 4, display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid', borderColor: isDark ? '#333' : '#eee' }}>
           <Box>
             <Typography sx={{ fontFamily: SANS, fontWeight: 900, fontSize: '1.5rem', color: isDark ? '#fff' : '#000', textTransform: 'uppercase', letterSpacing: -0.5 }}>Initialize Squad</Typography>

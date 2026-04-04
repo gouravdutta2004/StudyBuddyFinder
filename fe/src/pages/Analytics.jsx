@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import api from '../api/axios';
 import { Box, Typography, CircularProgress, useTheme, Chip } from '@mui/material';
-import { motion } from 'framer-motion';
+import { motion, Reorder } from 'framer-motion';
 import {
   BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell, Tooltip as RTooltip,
   XAxis, YAxis, ResponsiveContainer, CartesianGrid
 } from 'recharts';
-import { BarChart2, Clock, Hash, Target, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { BarChart2, Clock, Hash, Target, TrendingUp, TrendingDown, Minus, GripHorizontal } from 'lucide-react';
 
 const COLORS = ['#6366f1', '#22d3ee', '#10b981', '#f59e0b', '#a78bfa', '#fb7185'];
 
@@ -151,6 +151,7 @@ export default function Analytics() {
   const isDark = theme.palette.mode === 'dark';
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [sections, setSections] = useState(['kpis', 'charts', 'bottom']);
 
   useEffect(() => {
     api.get('/users/analytics/me').then(r => setData(r.data)).catch(() => {}).finally(() => setLoading(false));
@@ -207,86 +208,96 @@ export default function Analytics() {
           </Box>
         </motion.div>
 
-        {/* ── 3 KPI Cards ── */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' }, gap: 2.5, mb: 3 }}>
-          <KPICard icon={Clock} label="Total Hours" value={d.totalStudyHours} unit="h" delta={hoursDelta} color="#6366f1" delay={0} />
-          <KPICard icon={Hash} label="Sessions" value={thisWeekSessions} unit="" delta={sessionsDelta} color="#22d3ee" delay={0.06} />
-          <KPICard icon={Target} label="Avg. Focus / Day" value={isNaN(avgFocusHours) ? 0 : avgFocusHours} unit="h" delta={!isNaN(focusDelta) ? focusDelta : 0} color="#10b981" delay={0.12} />
-        </Box>
+        <Reorder.Group axis="y" values={sections} onReorder={setSections} style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 24 }}>
+          {sections.map(sec => (
+            <Reorder.Item key={sec} value={sec} style={{ position: 'relative', cursor: 'grab' }} whileDrag={{ cursor: 'grabbing', scale: 1.02, zIndex: 1 }}>
+              
+              <Box sx={{ position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)', borderRadius: '10px', px: 2, py: 0.25, opacity: 0, transition: 'opacity 0.2s', '&:hover': { opacity: 1 }, ...(!isDark && { boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }) }} className="drag-handle-show-on-hover">
+                <GripHorizontal size={14} color={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'} />
+              </Box>
 
-        {/* ── Charts Row ── */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' }, gap: 2.5, mb: 2.5 }}>
-
-          {/* Sessions per Week bar chart */}
-          <SectionCard title="Sessions Per Week" icon={TrendingUp} color="#22d3ee" chip="8 WEEKS" delay={0.18}>
-            {d.sessionsByWeek.length > 0 ? (
-              <ResponsiveContainer width="100%" height={180}>
-                <BarChart data={d.sessionsByWeek} margin={{ top: 0, right: 0, left: -22, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'} vertical={false} />
-                  <XAxis dataKey="week" tick={{ fontSize: 10, fill: txt }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 10, fill: txt }} axisLine={false} tickLine={false} />
-                  <RTooltip contentStyle={{ background: cardBg, border: `1px solid ${borderC}`, borderRadius: 10, fontSize: 12 }} />
-                  <Bar dataKey="sessions" fill="#22d3ee" radius={[6, 6, 0, 0]} maxBarSize={40} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : <EmptyChart icon={BarChart2} msg="Start sessions to see data" />}
-          </SectionCard>
-
-          {/* Hours per Day area chart */}
-          <SectionCard title="Hours Studied" icon={Clock} color="#6366f1" chip="30 DAYS" delay={0.22}>
-            {d.hoursByDay.length > 0 ? (
-              <ResponsiveContainer width="100%" height={180}>
-                <AreaChart data={d.hoursByDay} margin={{ top: 0, right: 0, left: -22, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="hoursGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke={isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'} vertical={false} />
-                  <XAxis dataKey="date" tick={{ fontSize: 9, fill: txt }} tickFormatter={v => v.slice(5)} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 10, fill: txt }} axisLine={false} tickLine={false} />
-                  <RTooltip contentStyle={{ background: cardBg, border: `1px solid ${borderC}`, borderRadius: 10, fontSize: 12 }} />
-                  <Area type="monotone" dataKey="hours" stroke="#6366f1" fill="url(#hoursGrad)" strokeWidth={2.5} dot={false} />
-                </AreaChart>
-              </ResponsiveContainer>
-            ) : <EmptyChart icon={Clock} msg="Log study time to see data" />}
-          </SectionCard>
-        </Box>
-
-        {/* ── Bottom Row: Top Subjects + Heatmap ── */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '300px 1fr' }, gap: 2.5 }}>
-
-          {/* Top Subjects */}
-          <SectionCard title="Top Subjects" icon={Target} color="#a78bfa" delay={0.26}>
-            {d.topSubjects.length > 0 ? (
-              <>
-                <ResponsiveContainer width="100%" height={160}>
-                  <PieChart>
-                    <Pie data={d.topSubjects} cx="50%" cy="50%" innerRadius={45} outerRadius={72} paddingAngle={3} dataKey="value">
-                      {d.topSubjects.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                    </Pie>
-                    <RTooltip contentStyle={{ background: cardBg, border: `1px solid ${borderC}`, borderRadius: 10, fontSize: 12 }} />
-                  </PieChart>
-                </ResponsiveContainer>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75, mt: 1 }}>
-                  {d.topSubjects.map((s, i) => (
-                    <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                      <Box sx={{ width: 8, height: 8, borderRadius: '2px', bgcolor: COLORS[i % COLORS.length], flexShrink: 0 }} />
-                      <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: isDark ? 'white' : '#374151' }}>{s.name}</Typography>
-                      <Typography sx={{ fontFamily: 'monospace', fontSize: '0.75rem', fontWeight: 800, color: COLORS[i % COLORS.length] }}>{s.value}</Typography>
-                    </Box>
-                  ))}
+              <style>{`.drag-handle-show-on-hover { opacity: 0; } :hover > .drag-handle-show-on-hover { opacity: 1; }`}</style>
+              
+              {sec === 'kpis' && (
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' }, gap: 2.5 }}>
+                  <KPICard icon={Clock} label="Total Hours" value={d.totalStudyHours} unit="h" delta={hoursDelta} color="#6366f1" delay={0} />
+                  <KPICard icon={Hash} label="Sessions" value={thisWeekSessions} unit="" delta={sessionsDelta} color="#22d3ee" delay={0.06} />
+                  <KPICard icon={Target} label="Avg. Focus / Day" value={isNaN(avgFocusHours) ? 0 : avgFocusHours} unit="h" delta={!isNaN(focusDelta) ? focusDelta : 0} color="#10b981" delay={0.12} />
                 </Box>
-              </>
-            ) : <EmptyChart icon={Target} msg="Join sessions to see subjects" />}
-          </SectionCard>
+              )}
 
-          {/* Heatmap */}
-          <SectionCard title="Activity Heatmap" icon={BarChart2} color="#10b981" chip="365 DAYS" delay={0.3}>
-            <ActivityHeatmap activityLog={d.activityLog} />
-          </SectionCard>
-        </Box>
+              {sec === 'charts' && (
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' }, gap: 2.5 }}>
+                  <SectionCard title="Sessions Per Week" icon={TrendingUp} color="#22d3ee" chip="8 WEEKS" delay={0.18}>
+                    {d.sessionsByWeek.length > 0 ? (
+                      <ResponsiveContainer width="100%" height={180}>
+                        <BarChart data={d.sessionsByWeek} margin={{ top: 0, right: 0, left: -22, bottom: 0 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke={isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'} vertical={false} />
+                          <XAxis dataKey="week" tick={{ fontSize: 10, fill: txt }} axisLine={false} tickLine={false} />
+                          <YAxis tick={{ fontSize: 10, fill: txt }} axisLine={false} tickLine={false} />
+                          <RTooltip contentStyle={{ background: cardBg, border: `1px solid ${borderC}`, borderRadius: 10, fontSize: 12 }} />
+                          <Bar dataKey="sessions" fill="#22d3ee" radius={[6, 6, 0, 0]} maxBarSize={40} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    ) : <EmptyChart icon={BarChart2} msg="Start sessions to see data" />}
+                  </SectionCard>
+
+                  <SectionCard title="Hours Studied" icon={Clock} color="#6366f1" chip="30 DAYS" delay={0.22}>
+                    {d.hoursByDay.length > 0 ? (
+                      <ResponsiveContainer width="100%" height={180}>
+                        <AreaChart data={d.hoursByDay} margin={{ top: 0, right: 0, left: -22, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="hoursGrad" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
+                              <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke={isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'} vertical={false} />
+                          <XAxis dataKey="date" tick={{ fontSize: 9, fill: txt }} tickFormatter={v => v.slice(5)} axisLine={false} tickLine={false} />
+                          <YAxis tick={{ fontSize: 10, fill: txt }} axisLine={false} tickLine={false} />
+                          <RTooltip contentStyle={{ background: cardBg, border: `1px solid ${borderC}`, borderRadius: 10, fontSize: 12 }} />
+                          <Area type="monotone" dataKey="hours" stroke="#6366f1" fill="url(#hoursGrad)" strokeWidth={2.5} dot={false} />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    ) : <EmptyChart icon={Clock} msg="Log study time to see data" />}
+                  </SectionCard>
+                </Box>
+              )}
+
+              {sec === 'bottom' && (
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '300px 1fr' }, gap: 2.5 }}>
+                  <SectionCard title="Top Subjects" icon={Target} color="#a78bfa" delay={0.26}>
+                    {d.topSubjects.length > 0 ? (
+                      <>
+                        <ResponsiveContainer width="100%" height={160}>
+                          <PieChart>
+                            <Pie data={d.topSubjects} cx="50%" cy="50%" innerRadius={45} outerRadius={72} paddingAngle={3} dataKey="value">
+                              {d.topSubjects.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                            </Pie>
+                            <RTooltip contentStyle={{ background: cardBg, border: `1px solid ${borderC}`, borderRadius: 10, fontSize: 12 }} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75, mt: 1 }}>
+                          {d.topSubjects.map((s, i) => (
+                            <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                              <Box sx={{ width: 8, height: 8, borderRadius: '2px', bgcolor: COLORS[i % COLORS.length], flexShrink: 0 }} />
+                              <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: isDark ? 'white' : '#374151' }}>{s.name}</Typography>
+                              <Typography sx={{ fontFamily: 'monospace', fontSize: '0.75rem', fontWeight: 800, color: COLORS[i % COLORS.length] }}>{s.value}</Typography>
+                            </Box>
+                          ))}
+                        </Box>
+                      </>
+                    ) : <EmptyChart icon={Target} msg="Join sessions to see subjects" />}
+                  </SectionCard>
+
+                  <SectionCard title="Activity Heatmap" icon={BarChart2} color="#10b981" chip="365 DAYS" delay={0.3}>
+                    <ActivityHeatmap activityLog={d.activityLog} />
+                  </SectionCard>
+                </Box>
+              )}
+            </Reorder.Item>
+          ))}
+        </Reorder.Group>
 
       </Box>
     </Box>

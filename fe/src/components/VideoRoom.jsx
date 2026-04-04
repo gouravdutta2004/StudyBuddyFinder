@@ -27,7 +27,15 @@ export default function VideoRoom({ roomId, socket, onTogglePanel, showPanel }) 
     if (!socket) return;
 
     // 1. Get local media
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+    navigator.mediaDevices.getUserMedia({
+      video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+        sampleRate: 48000,
+      },
+    })
       .then((currentStream) => {
         setStream(currentStream);
         if (localVideoRef.current) localVideoRef.current.srcObject = currentStream;
@@ -146,6 +154,7 @@ export default function VideoRoom({ roomId, socket, onTogglePanel, showPanel }) 
         {/* Remote Videos */}
         {peers.map((peerId) => (
           <Box key={peerId} sx={{ position: 'relative', width: { xs: 120, md: 160 }, height: { xs: 90, md: 120 }, flexShrink: 0, bgcolor: '#111', borderRadius: 3, overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)' }}>
+            {/* Phase 1 FIX: autoPlay + playsInline, NO muted on remote video */}
             <video playsInline autoPlay ref={el => { if(el) remoteVideoesRef.current[peerId] = el; }} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             <Box sx={{ position: 'absolute', bottom: 6, left: 6, bgcolor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', color: 'white', px: 1, py: 0.25, borderRadius: 1 }}>
                <Typography variant="caption" fontWeight={600} fontSize="0.7rem">Peer</Typography>

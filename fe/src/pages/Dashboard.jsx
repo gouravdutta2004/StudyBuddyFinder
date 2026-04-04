@@ -412,7 +412,7 @@ export default function Dashboard() {
                   </Typography>
                 </Box>
 
-                <Typography sx={{ fontWeight: 800, fontSize: { xs: '1.5rem', md: '2rem' }, lineHeight: 1.1, mb: 0.5 }}>
+                <Typography sx={{ fontFamily: '"Plus Jakarta Sans", sans-serif', fontWeight: 800, fontSize: { xs: '1.5rem', md: '2rem' }, lineHeight: 1.1, mb: 0.5 }}>
                   {greet},{' '}
                   <Box component="span" sx={{
                     background: 'linear-gradient(90deg, #6366f1, #22d3ee, #a78bfa)',
@@ -428,7 +428,7 @@ export default function Dashboard() {
                   </Box>
                 </Typography>
 
-                <Typography sx={{ fontSize: '0.85rem', color: isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.45)', fontWeight: 500 }}>
+                <Typography sx={{ fontFamily: '"Plus Jakarta Sans", sans-serif', fontSize: '0.85rem', color: isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.45)', fontWeight: 500 }}>
                   Keep the momentum going · Your streak is{' '}
                   <Box component="span" sx={{ color: '#f97316', fontWeight: 800 }}>{user?.streak || 0} days</Box>{' 🔥'}
                 </Typography>

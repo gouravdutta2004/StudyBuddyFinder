@@ -187,7 +187,7 @@ function GameCard({ game, index, onSelect }) {
       whileHover={{ y: -6, scale: 1.02 }}
       whileTap={{ scale: 0.97 }}
       onClick={() => onSelect(game.id)}
-      style={{ cursor: 'pointer', height: '100%' }}
+      style={{ cursor: 'pointer', height: '100%', display: 'flex', flexDirection: 'column' }}
     >
       <Box sx={{
         height: '100%', position: 'relative', overflow: 'hidden',
@@ -226,9 +226,9 @@ function GameCard({ game, index, onSelect }) {
           )}
         </AnimatePresence>
 
-        <Box sx={{ position: 'relative', zIndex: 1, p: 3, flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ position: 'relative', zIndex: 1, p: 3, flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
           {/* Top row */}
-          <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 2.5 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.5, mb: 2.5 }}>
             <Box sx={{
               width: 52, height: 52, borderRadius: '12px',
               background: game.gradient,
@@ -256,17 +256,17 @@ function GameCard({ game, index, onSelect }) {
 
           {/* Tagline */}
           <Typography fontFamily="monospace" fontSize="0.6rem" color={game.color + 'aa'} fontWeight={700}
-            letterSpacing={2} mb={1.5}>
+            letterSpacing={2} mb={1.5} sx={{ textWrap: 'balance' }}>
             {game.tagline}
           </Typography>
 
           {/* Description */}
-          <Typography fontSize="0.82rem" color="rgba(255,255,255,0.5)" lineHeight={1.6} flex={1} mb={2}>
+          <Typography fontSize="0.82rem" color="rgba(255,255,255,0.5)" lineHeight={1.6} flex={1} mb={2} sx={{ textWrap: 'balance' }}>
             {game.description}
           </Typography>
 
           {/* Footer */}
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pt: 2, borderTop: `1px solid rgba(255,255,255,0.05)` }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', gap: 1.5, pt: 2, borderTop: `1px solid rgba(255,255,255,0.05)` }}>
             <Box sx={{ display: 'flex', gap: 0.4 }}>
               {Array.from({ length: 5 }).map((_, i) => (
                 <Star key={i} size={12}
@@ -424,9 +424,9 @@ export default function Arcade() {
             <motion.div key="lobby" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.98 }}>
 
               {/* ── Header ── */}
-              <Box sx={{ mb: 4, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
-                <Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 0.75 }}>
+              <Box sx={{ mb: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 2 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 0.75, justifyContent: 'center' }}>
                     <Box
                       component={motion.div}
                       animate={{ opacity: [1, 0.5, 1] }}
@@ -451,7 +451,7 @@ export default function Arcade() {
                 </Box>
 
                 {/* Stats */}
-                <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+                <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', justifyContent: 'center' }}>
                   {[
                     { label: 'GAMES', val: GAMES.length, color: '#38bdf8' },
                     { label: 'XP ENABLED', val: '✓', color: '#22c55e' },
@@ -481,15 +481,18 @@ export default function Arcade() {
                 ALL GAMES — {GAMES.length} TITLES
               </Typography>
 
-              <Grid container spacing={2.5}>
+              <Box sx={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+                gap: 2.5,
+                alignContent: 'start',
+              }}>
                 {GAMES.map((game, i) => (
-                  <Grid item xs={12} sm={6} lg={4} key={game.id} sx={{ display: 'flex' }}>
-                    <Box sx={{ width: '100%' }}>
-                      <GameCard game={game} index={i} onSelect={setActiveGame} />
-                    </Box>
-                  </Grid>
+                  <Box key={game.id} sx={{ display: 'flex', flexDirection: 'column' }}>
+                    <GameCard game={game} index={i} onSelect={setActiveGame} />
+                  </Box>
                 ))}
-              </Grid>
+              </Box>
 
               {/* ── Footer ── */}
               <ArcadeFooter onLeaderboard={() => navigate('/leaderboard')} />

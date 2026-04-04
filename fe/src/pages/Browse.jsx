@@ -73,14 +73,6 @@ function UserCard({ u, isActive, onConnect, alreadySent, navigate, isDark }) {
         >
           {u.name?.[0]}
         </Avatar>
-        {u.level && (
-          <Chip
-            icon={<Zap size={10} style={{ color: 'white' }} />}
-            label={`Lv ${u.level}`}
-            size="small"
-            sx={{ ml: 1.5, height: 22, bgcolor: 'rgba(0,0,0,0.3)', color: 'white', fontWeight: 800, fontSize: '0.65rem', backdropFilter: 'blur(8px)' }}
-          />
-        )}
       </Box>
 
       {/* Body */}
@@ -196,7 +188,7 @@ export default function Browse() {
     finally { setLoading(false); }
   };
 
-  useEffect(() => { search(); }, []); // eslint-disable-line
+  useEffect(() => { search({ ...filters, _limit: 8 }); }, []); // eslint-disable-line
   useEffect(() => {
     if (user?.sentRequests) setSentReqs(new Set(user.sentRequests.map(r => r._id || r)));
   }, [user]);
@@ -277,10 +269,10 @@ export default function Browse() {
         <Box sx={{ mb: 5 }}>
           <Typography variant="h2" fontWeight={900} color={isDark ? 'white' : '#0f172a'}
             sx={{ letterSpacing: '-1.5px', lineHeight: 1, mb: 0.75 }}>
-            Browse Scholars
+            Suggested Peers
           </Typography>
           <Typography color="text.secondary" fontWeight={500} fontSize="1rem">
-            Swipe or click arrows to discover study buddies.
+            Curated study buddies — swipe or click arrows to connect.
           </Typography>
         </Box>
 
@@ -376,7 +368,7 @@ export default function Browse() {
                 <Typography component="span" fontWeight={900} color={isDark ? 'white' : '#0f172a'} fontSize="1.1rem">
                   {activeIdx + 1}
                 </Typography>
-                {' '}/ {users.length} scholars
+                {' '}/ {users.length} peers
               </Typography>
 
               <Box sx={{ display: 'flex', gap: 1 }}>
@@ -437,8 +429,14 @@ export default function Browse() {
                         transformOrigin: 'center bottom',
                       }}
                     >
-                      <UserCard u={u} isActive={isActive} onConnect={handleConnect} navigate={navigate} isDark={isDark}
-                        alreadySent={sentReqs.has(u._id) || user?.connections?.includes(u._id)} />
+                      <motion.div
+                        animate={{ y: isActive ? [0, -12, 0] : 0 }}
+                        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+                        style={{ height: '100%' }}
+                      >
+                        <UserCard u={u} isActive={isActive} onConnect={handleConnect} navigate={navigate} isDark={isDark}
+                          alreadySent={sentReqs.has(u._id) || user?.connections?.includes(u._id)} />
+                      </motion.div>
                     </motion.div>
                   );
                 })}
@@ -477,7 +475,7 @@ export default function Browse() {
             <Box sx={{ mt: 5 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
                 <Typography fontWeight={800} color={isDark ? 'rgba(255,255,255,0.6)' : '#475569'} fontSize="0.85rem" sx={{ textTransform: 'uppercase', letterSpacing: 1 }}>
-                  All Scholars
+                  Suggested Users
                 </Typography>
                 <Typography variant="caption" color="text.secondary" fontWeight={700}>{users.length} total</Typography>
               </Box>

@@ -50,7 +50,6 @@ import LiveRooms from './pages/LiveRooms';
 import WhobeeChat from './components/WhobeeChat';
 import GlobalMessengerWidget from './components/GlobalMessengerWidget';
 import SupportWidget from './components/SupportWidget';
-import CustomCursor from './components/CustomCursor';
 import CommandPalette from './components/CommandPalette';
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -169,11 +168,81 @@ export default function App() {
     <GoogleOAuthProvider clientId={clientId}>
       <GlobalErrorBoundary>
       <ThemeProvider>
-      <CustomCursor />
       <AuthProvider>
         <SocketProvider>
           <BrowserRouter>
-            <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
+            <Toaster
+              position="top-right"
+              gutter={10}
+              containerStyle={{
+                top: 16,
+                right: 16,
+                zIndex: 99999,
+              }}
+              toastOptions={{
+                duration: 4000,
+                // Base style for plain toast() calls that aren't custom cards
+                style: {
+                  fontFamily: "'Plus Jakarta Sans','Inter',system-ui,sans-serif",
+                  background: 'rgba(10,15,28,0.95)',
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)',
+                  color: 'rgba(255,255,255,0.9)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: 14,
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  padding: '12px 16px',
+                  maxWidth: 380,
+                },
+                success: {
+                  duration: 4000,
+                  iconTheme: { primary: '#10b981', secondary: '#fff' },
+                  style: {
+                    fontFamily: "'Plus Jakarta Sans','Inter',system-ui,sans-serif",
+                    background: 'rgba(10,15,28,0.95)',
+                    backdropFilter: 'blur(20px)',
+                    color: 'rgba(255,255,255,0.9)',
+                    border: '1px solid rgba(16,185,129,0.4)',
+                    borderRadius: 14,
+                    boxShadow: '0 8px 32px rgba(16,185,129,0.2)',
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    padding: '12px 16px',
+                    maxWidth: 380,
+                  },
+                },
+                error: {
+                  duration: 5000,
+                  iconTheme: { primary: '#ef4444', secondary: '#fff' },
+                  style: {
+                    fontFamily: "'Plus Jakarta Sans','Inter',system-ui,sans-serif",
+                    background: 'rgba(10,15,28,0.95)',
+                    backdropFilter: 'blur(20px)',
+                    color: 'rgba(255,255,255,0.9)',
+                    border: '1px solid rgba(239,68,68,0.4)',
+                    borderRadius: 14,
+                    boxShadow: '0 8px 32px rgba(239,68,68,0.2)',
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    padding: '12px 16px',
+                    maxWidth: 380,
+                  },
+                },
+                // Custom cards (toast.custom) get no wrapper styles — their Card component handles all styling
+                custom: {
+                  duration: 6000,
+                  style: {
+                    background: 'transparent',
+                    padding: 0,
+                    boxShadow: 'none',
+                    border: 'none',
+                    maxWidth: 400,
+                  },
+                },
+              }}
+            />
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/org-admin-login" element={<OrgAdminLogin />} />

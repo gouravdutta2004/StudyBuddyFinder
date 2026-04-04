@@ -206,6 +206,9 @@ function SocialAccountsGrid({ socialLinks = {}, isDark, isSelf = false, onSave }
           const url = isConnected ? href(val) : null;
           const canEdit = isSelf;
 
+          // Only render if connected, or if viewing own profile (to allow connection)
+          if (!isConnected && !canEdit) return null;
+
           return (
             <Box
               key={key}
@@ -512,9 +515,18 @@ export default function UserProfile() {
             <Box sx={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '50%', background: 'linear-gradient(to top,rgba(0,0,0,0.4),transparent)' }} />
           </Box>
 
-          {/* Persona row */}
+          {/* Persona row — Flexbox, responsive, no absolute overlap */}
           <Box sx={{ px: { xs: 3, md: 5 }, pb: 4 }}>
-            <Box sx={{ display: 'flex', gap: { xs: 2, md: 4 }, alignItems: 'flex-start', flexWrap: 'wrap', mt: { xs: '-56px', sm: '-64px' } }}>
+            <Box sx={{
+              display: 'flex',
+              flexDirection: { xs: 'column', sm: 'row' },
+              alignItems: { xs: 'center', sm: 'flex-start' },
+              gap: { xs: 2, md: 4 },
+              mt: { xs: '-56px', sm: '-64px' },
+              position: 'relative',
+              zIndex: 2,
+              width: '100%',
+            }}>
               {/* Avatar inside league ring */}
               <Box sx={{ position: 'relative', flexShrink: 0 }}>
                 <LeagueRing league={league} size={148} />
@@ -528,7 +540,7 @@ export default function UserProfile() {
               <Box sx={{ flex: 1, minWidth: 220, pt: { xs: 0, sm: 2 }, mt: { xs: 2, sm: 0 } }}>
                 {/* Name + verified */}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap', mt: '8px' }}>
-                  <Typography sx={{ fontWeight: 900, fontSize: { xs: '1.6rem', md: '2rem' }, color: isDark ? 'white' : '#0f172a', lineHeight: 1, letterSpacing: -1 }}>
+                  <Typography sx={{ fontFamily: '"Plus Jakarta Sans", sans-serif', fontWeight: 900, fontSize: { xs: '1.6rem', md: '2rem' }, color: isDark ? 'white' : '#0f172a', lineHeight: 1, letterSpacing: -1 }}>
                     {profile.name}
                   </Typography>
                   {profile.isVerified && (
