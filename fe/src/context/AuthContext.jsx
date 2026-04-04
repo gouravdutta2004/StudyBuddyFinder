@@ -110,10 +110,21 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
-  const updateUser = (updatedUser) => setUser(updatedUser);
+  const updateUser = (updatedFields) => setUser(prev => prev ? { ...prev, ...updatedFields } : updatedFields);
+
+  // Hard-refresh user from the server (use after KYC or profile mutations)
+  const refreshUser = async () => {
+    try {
+      const { data } = await api.get('/auth/me');
+      setUser(data);
+      return data;
+    } catch (e) {
+      return null;
+    }
+  };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, loading, login, register, googleLogin, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, setUser, loading, login, register, googleLogin, logout, updateUser, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

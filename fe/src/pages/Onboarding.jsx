@@ -52,6 +52,7 @@ function FlameArt({ step }) {
 
 export default function Onboarding() {
   const { updateUser } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -96,9 +97,15 @@ export default function Onboarding() {
         studyProfile: { focusSpan, learningType, energyPeak }
       };
       const res = await api.put('/users/profile', payload);
+      // Merge the returned profile into context
       updateUser(res.data);
       toast.success('🔥 Profile ignited! Welcome to the network.');
-      navigate('/dashboard');
+      // Institutional users (have an organization) must go through KYC first
+      if (res.data.organization) {
+        navigate('/kyc');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err) {
       console.error('Onboarding error:', err.response?.data || err);
       toast.error(err.response?.data?.message || 'Failed to save profile');

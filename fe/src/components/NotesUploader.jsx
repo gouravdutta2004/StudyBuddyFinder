@@ -77,7 +77,7 @@ export default function NotesUploader({ session, setSession }) {
         ) : (
           session.notes.map((note, idx) => (
             <Card key={idx} variant="outlined" sx={{ borderRadius: 3, bgcolor: 'background.default', '&:hover': { borderColor: 'primary.main' } }}>
-              <CardActionArea href={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5001'}${note.url}`} target="_blank" rel="noreferrer" sx={{ p: 1.5 }}>
+              <CardActionArea href={note.url} target="_blank" rel="noreferrer" sx={{ p: 1.5 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                   <Avatar sx={{ bgcolor: theme.palette.mode === 'dark' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.1)', color: 'primary.main', width: 40, height: 40, borderRadius: 2 }}>
                     <FileText size={20} />

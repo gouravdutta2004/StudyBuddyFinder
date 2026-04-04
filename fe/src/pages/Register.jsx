@@ -235,7 +235,7 @@ export default function Register() {
                 {/* Domain tip */}
                 {joinType === 'institution' && selectedCollege?.domains?.[0] && (
                   <div className="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-xs text-indigo-300">
-                    <strong>Tip:</strong> Use <em>@{selectedCollege.domains[0]}</em> email for instant approval.
+                    <strong>Tip:</strong> Use <em>@{selectedCollege.domains[0]}</em> email for instant approval. If you are the first student from your campus, you will automatically be granted Org Admin rights.
                   </div>
                 )}
 

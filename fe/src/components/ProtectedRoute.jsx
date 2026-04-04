@@ -141,11 +141,22 @@ export default function ProtectedRoute({ children }) {
   if (user.role === 'ORG_ADMIN' && !user.isAdmin && location.pathname !== '/org-admin')
     return <Navigate to="/org-admin" replace />;
 
-  // Enforce Onboarding
+  // Enforce Onboarding — skip if heading to /kyc as well
   if (!user.isAdmin && user.role === 'USER') {
     const isUnonboarded = !user.subjects?.length || !user.studyProfile?.focusSpan;
-    if (isUnonboarded && location.pathname !== '/onboarding') {
+    const exemptPaths = ['/onboarding', '/kyc'];
+    if (isUnonboarded && !exemptPaths.includes(location.pathname)) {
       return <Navigate to="/onboarding" replace />;
+    }
+  }
+
+  // Enforce KYC for institutional users (those linked to an organization)
+  // Global users (no organization) and admins bypass KYC entirely
+  if (!user.isAdmin && user.organization) {
+    const kycDone = user.kycStatus === 'VERIFIED';
+    const exemptPaths = ['/kyc', '/onboarding'];
+    if (!kycDone && !exemptPaths.includes(location.pathname)) {
+      return <Navigate to="/kyc" replace />;
     }
   }
 

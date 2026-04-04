@@ -31,6 +31,7 @@ import ResetPassword from './pages/ResetPassword';
 import Billing from './pages/Billing';
 
 import Onboarding from './pages/Onboarding';
+import KycVerification from './pages/KycVerification';
 import Leaderboard from './pages/Leaderboard';
 import GlobalAnnouncementBanner from './components/GlobalAnnouncementBanner';
 import GroupDetails from './pages/GroupDetails';
@@ -178,6 +179,7 @@ export default function App() {
               <Route path="/org-admin-login" element={<OrgAdminLogin />} />
               <Route path="/register" element={<Register />} />
               <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+              <Route path="/kyc" element={<ProtectedRoute><KycVerification /></ProtectedRoute>} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password/:token" element={<ResetPassword />} />
               <Route path="/" element={<Landing />} />

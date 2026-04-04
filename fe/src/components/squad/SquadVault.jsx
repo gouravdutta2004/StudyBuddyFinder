@@ -64,8 +64,8 @@ export default function SquadVault({ groupId, initialResources = [] }) {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       
-      const wsUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5001';
-      const fileUrl = `${wsUrl}${uploadRes.data.url}`; // Ensure absolute backend URL for now
+      // Cloudinary returns an absolute URL natively
+      const fileUrl = uploadRes.data.url;
 
       // 2. Save resource to Group
       const res = await api.post(`/groups/${groupId}/resources`, {

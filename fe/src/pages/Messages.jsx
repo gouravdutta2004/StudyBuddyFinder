@@ -170,8 +170,8 @@ export default function Messages() {
     const tid = toast.loading('Uploading…');
     try {
       const { data } = await api.post('/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
-      const wsUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5001';
-      const url = `${wsUrl}${data.url}`;
+      // Cloudinary returns an absolute URL natively
+      const url = data.url;
       const md = file.type.startsWith('image/') ? `![img](${url})` : `[${file.name}](${url})`;
       setNewMsg(p => p ? `${p}\n${md}` : md);
       toast.success('File attached', { id: tid });
