@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  database:
+    image: mongo:latest
+    container_name: studyfriend_mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - studyfriend_net
+
+  backend:
+    build: 
+      context: ./be
+    container_name: studyfriend_be
+    ports:
+      - "5001:5001"
+    environment:
+      - PORT=5001
+      - MONGO_URI=mongodb://database:27017/studybuddyfinder
+      # Provide remaining keys inside the .env file in the /be directory
+    env_file:
+      - ./be/.env
+    depends_on:
+      - database
+    networks:
+      - studyfriend_net
+
+  frontend:
+    build: 
+      context: ./fe
+    container_name: studyfriend_fe
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    networks:
+      - studyfriend_net
+
+networks:
+  studyfriend_net:
+    driver: bridge
+
+volumes:
+  mongo-data:
